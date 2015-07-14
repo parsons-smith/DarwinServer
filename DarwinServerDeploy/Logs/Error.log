@@ -1,0 +1,55 @@
+#Log File Created On: 07/10/2015 14:01:35
+# Streaming STARTUP 2015-07-10 14:01:35
+2015-07-10 14:01:36: WARNING: No module folder exists.
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-10 14:01:36: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-10 14:01:36: WARNING: No users file found at qtusers.
+2015-07-10 14:01:36: WARNING: No groups file found at qtgroups.
+# Streaming SHUTDOWN 2015-07-10 14:03:06
+# Streaming STARTUP 2015-07-10 14:03:11
+2015-07-10 14:03:12: WARNING: No module folder exists.
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-10 14:03:12: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-10 14:03:12: WARNING: No users file found at qtusers.
+2015-07-10 14:03:12: WARNING: No groups file found at qtgroups.
+# Streaming SHUTDOWN 2015-07-10 17:26:45
+# Streaming STARTUP 2015-07-10 17:26:47
+2015-07-10 17:26:48: WARNING: No module folder exists.
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-10 17:26:48: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-10 17:26:48: WARNING: No users file found at qtusers.
+2015-07-10 17:26:48: WARNING: No groups file found at qtgroups.
+# Streaming STARTUP 2015-07-13 19:39:45
+2015-07-13 19:39:46: WARNING: No module folder exists.
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-13 19:39:46: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-13 19:39:46: WARNING: No users file found at qtusers.
+2015-07-13 19:39:46: WARNING: No groups file found at qtgroups.

@@ -1,0 +1,13 @@
+#Log File Created On: 07/10/2015 14:01:36
+#Software: DSS
+#Version: 7.0.0
+#Date: 2015-07-10 14:01:36
+#Remark: All date values are in GMT.
+#Remark: c-duration is in seconds.
+#Fields: c-ip c-user-agent [date time] cs-uri c-status c-bytes c-duration
+#Remark: Streaming beginning STARTUP 2015-07-10 14:01:36
+#Remark: Streaming beginning SHUTDOWN 2015-07-10 14:03:06
+#Remark: Streaming beginning STARTUP 2015-07-10 14:03:12
+#Remark: Streaming beginning SHUTDOWN 2015-07-10 17:26:45
+#Remark: Streaming beginning STARTUP 2015-07-10 17:26:48
+#Remark: Streaming beginning STARTUP 2015-07-13 19:39:46

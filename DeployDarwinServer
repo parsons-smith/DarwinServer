@@ -1,0 +1,16 @@
+#!/bin/sh
+ 
+rm -rf DarwinServerDeploy/ DarwinServerDeploy.tar
+echo "create deploy directory"
+mkdir -p DarwinServerDeploy/Movies
+
+echo "copy necessary files"
+if [ -f DarwinServer ]; then
+	cp -v DarwinServer darwinserver.xml WinNTSupport/devices.xml DarwinServerDeploy/
+	cp -v Demo.mp4 DarwinServerDeploy/Movies	
+	echo "generate tarball"
+	tar cvf DarwinServerDeploy.tar DarwinServerDeploy/
+	echo Success!
+else
+	echo Build DarwinServer failed!
+fi
