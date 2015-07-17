@@ -45,14 +45,14 @@ int main( int argc, char * argv[ ] )
                              <cfd>6</cfd> \
                             <deviceip>192.168.1.11</deviceip> \
                             <token>PROFILE_H264_CH0_MAJOR</token> \
-                            <sourceuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</sourceuri> \
+                            <sourceuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</sourceuri> \
                         </profile> \
                         <profile> \
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
                             <deviceip>192.168.1.11</deviceip> \
                             <token>PROFILE_H264_CH0_MINOR</token> \
-                            <sourceuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</sourceuri> \
+                            <sourceuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</sourceuri> \
                         </profile> \
                     </Envelope>";
         
@@ -64,7 +64,7 @@ int main( int argc, char * argv[ ] )
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
                             <deviceip>192.168.1.11</deviceip> \
-                            <rtspuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</rtspuri> \
+                            <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</rtspuri> \
                             <height>720</height> \
                             <width>1280</width> \
                             <split>30</split> \
@@ -77,7 +77,7 @@ int main( int argc, char * argv[ ] )
                         <profile> \
                             <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
-                            <rtspuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</rtspuri> \
+                            <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</rtspuri> \
                         </profile> \
                     </Envelope>";
 
@@ -87,7 +87,7 @@ int main( int argc, char * argv[ ] )
                             <category>cross</category> \
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
-                             <rtspuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</rtspuri> \
+                             <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</rtspuri> \
                     	   <startcol>0</startcol> \
                     	   <startrow>1000</startrow> \
                     	   <endcol>1000</endcol> \
@@ -100,7 +100,7 @@ int main( int argc, char * argv[ ] )
                         <profile> \
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                             <cfd>6</cfd> \
-                            <rtspuri>rtsp://admin:123456@192.168.1.11:554/mpeg4</rtspuri> \
+                            <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1xcg</rtspuri> \
                         </profile> \
                     </Envelope>";
 

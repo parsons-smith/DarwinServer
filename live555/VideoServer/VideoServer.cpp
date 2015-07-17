@@ -67,6 +67,7 @@ public:
     pthread_t rpt;
     struct timeval start,end;
     int flag;
+    pthread_mutex_t x_lock;
 public:
     VideoUnderstanding(struct vsession * v);
     ~VideoUnderstanding();
@@ -83,12 +84,15 @@ public:
 void *run_thread(void * lw);
 void cleanup(void * arg);
 int DecodeXml(char * buffer);
+void * send_thread(void * st);
 
 VideoUnderstanding::VideoUnderstanding(struct vsession * v){
     vs = v;
     flag = 0;
     //**buf=0,*mhi =0, *motion=0;
     last = 0;
+    x_lock = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&x_lock);
 }
 
 VideoUnderstanding::~VideoUnderstanding(){
@@ -232,12 +236,12 @@ void  VideoUnderstanding::update_mhi( IplImage* img, IplImage* dst, int diff_thr
                 //printf("%d",end.tv_sec - start.tv_sec);
                 if(end.tv_sec - start.tv_sec >= interval){
                     if (flag == 1 && !strcmp(vs->warning_type, "shelter")){
-                        cout << "WARNING: "<<vs->rtspurl<<" Somebody shelter from the screen!"<<endl;
+                        cout << "WARNING: "<< time(NULL) <<vs->rtspurl<<" Somebody shelter from the screen!"<<endl;
                         sendwarningmessage("shelter");
                     }
                     if(!strcmp(vs->warning_type, "cross")){
                         sendwarningmessage("cross");
-                        cout << "WARNING: "<<vs->rtspurl<<" Somebody cross the line!"<<endl;
+                        cout << "WARNING: "<<time(NULL) << vs->rtspurl<<" Somebody cross the line!"<<endl;
                     }
                     gettimeofday(&start,NULL);
                     //printf("start-sec:%d\n",start.tv_sec);
@@ -259,7 +263,9 @@ int VideoUnderstanding::run()
 }
 
 int VideoUnderstanding::stop(){
-    pthread_cancel(rpt);
+    pthread_mutex_unlock(&x_lock);
+    pthread_join(rpt, NULL);
+    //pthread_cancel(rpt);
     /*
     cvDestroyWindow( "Motion" );
     if(capture != NULL){
@@ -271,25 +277,46 @@ int VideoUnderstanding::stop(){
 
 int VideoUnderstanding::sendwarningmessage(const char * type){
     const char * msgstl = "<?xml version=\"1.0\"?><Envelope type=\"warning\"><profile><mac>%s</mac><cfd>%s</cfd><rtspuri>%s</rtspuri><time>%ld</time><type>%s</type></profile></Envelope>";
-        char replybuffer[MAXDATASIZE];
-        sprintf(replybuffer, msgstl, vs->mac, vs->cfd, vs->rtspurl,time(NULL), type);
+        char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+        memset(replybuffer,0, strlen(replybuffer));
+        //char replybuffer[MAXDATASIZE] ={0};
+        int offset = sprintf(replybuffer, msgstl, vs->mac, vs->cfd, vs->rtspurl,time(NULL), type);
+        replybuffer[offset] = '\0';
         wmsgq.push(replybuffer);
         return 0;
 }
 
 int VideoUnderstanding::sendstartreply(const char * msg){
         const char * msgstl = "<?xml version=\"1.0\"?><Envelope type=\"r_startdeal\"><profile><mac>%s</mac><cfd>%s</cfd><rtspuri>%s</rtspuri><action>%s</action></profile></Envelope>";
-        char replybuffer[MAXDATASIZE];
+        char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+        memset(replybuffer,0, strlen(replybuffer));
+        //char replybuffer[MAXDATASIZE]={0};
         sprintf(replybuffer, msgstl, vs->mac, vs->cfd, vs->rtspurl, msg);
         cout<<"INFO: Action "<<msg<<endl;
         wmsgq.push(replybuffer);
         return 0;
 }
 
+void *send_thread(void * st){
+    while(true){
+            sleep(1);
+                while(!wmsgq.empty()){
+                    char *msg = wmsgq.pop();
+                    //printf("%s\n",msg);
+                    //printf("======================\n");
+                    if(send(sock_fd, msg, strlen(msg), 0) == -1){
+                        perror("ERROR:Send error\n");
+                    }
+                    delete [] msg;
+                }
+            }
+}
+
+
 void *run_thread(void * lw){
         ((VideoUnderstanding*)lw)->capture = cvCreateFileCapture( ((VideoUnderstanding*)lw)->vs->rtspurl);
 
-        pthread_cleanup_push(cleanup, lw);
+        //pthread_cleanup_push(cleanup, lw);
         if( ((VideoUnderstanding*)lw)->capture == NULL ){
                 printf("ERROR: Connection failed...\n");
                 ((VideoUnderstanding*)lw)->sendstartreply("fail");
@@ -297,12 +324,13 @@ void *run_thread(void * lw){
         }else{
                 ((VideoUnderstanding*)lw)->sendstartreply("success");
                 videoSession->Add(((VideoUnderstanding*)lw)->vs->rtspurl, (void *)lw);
+                printf("XXXXXXXXXXXXXXXXXX\n");
         }
         try{
                 if(((VideoUnderstanding*)lw)->capture ){
-                        cvNamedWindow( "Motion", 1 );
+                        //cvNamedWindow( "Motion", 1 );
                         gettimeofday(& ((VideoUnderstanding*)lw)->start,NULL);
-                        for(;;)
+                        for(;pthread_mutex_trylock(&(((VideoUnderstanding*)lw)->x_lock)) == EBUSY;)
                         {
                                 if( !cvGrabFrame( ((VideoUnderstanding*)lw)->capture ))  break;
                                 ((VideoUnderstanding*)lw)->image=cvQueryFrame( ((VideoUnderstanding*)lw)->capture );//用此句不花屏
@@ -318,11 +346,11 @@ void *run_thread(void * lw){
                                 }
                                 ((VideoUnderstanding*)lw)->update_mhi( ((VideoUnderstanding*)lw)->image,  ((VideoUnderstanding*)lw)->motion, 60 );
                                 //printf("-");
-                                cvLine( ((VideoUnderstanding*)lw)->image, Point(((VideoUnderstanding*)lw)->vs->startx, ((VideoUnderstanding*)lw)->vs->starty), Point(((VideoUnderstanding*)lw)->vs->endx, ((VideoUnderstanding*)lw)->vs->endy),Scalar(255,0,0));   //画出警戒线
-                                cvShowImage( "Motion", ((VideoUnderstanding*)lw)->image );
-                                //if( cvWaitKey(10) >= 0 ) break;
+                                //cvLine( ((VideoUnderstanding*)lw)->image, Point(((VideoUnderstanding*)lw)->vs->startx, ((VideoUnderstanding*)lw)->vs->starty), Point(((VideoUnderstanding*)lw)->vs->endx, ((VideoUnderstanding*)lw)->vs->endy),Scalar(255,0,0));   //画出警戒线
+                                //cvShowImage( "Motion", ((VideoUnderstanding*)lw)->image );
+                                if( cvWaitKey(10) >= 0 ) break;
                         }
-                        //cvReleaseCapture( & ((VideoUnderstanding*)lw)->capture );
+                        cvReleaseCapture( & ((VideoUnderstanding*)lw)->capture );
                         //cvDestroyWindow( "Motion" );
                 }
         }catch(exception &e){
@@ -331,24 +359,10 @@ void *run_thread(void * lw){
                 ((VideoUnderstanding*)lw)->sendstartreply("exception");
                 videoSession->Remove(((VideoUnderstanding*)lw)->vs->rtspurl);
         }
-        pthread_cleanup_pop(0);
+        //pthread_cleanup_pop(0);
         pthread_exit(0);
 }
 
-void cleanup(void * arg){
-    printf("CLEANUP_POP\n");
-    cvDestroyWindow( "Motion" );
-    
-    /*
-    if((((VideoUnderstanding*)arg)->image) != NULL){
-        cvReleaseImage(&(((VideoUnderstanding*)arg)->image));
-    }
-    */
-    cvDestroyAllWindows();
-    if(!(((VideoUnderstanding*)arg)->capture)){
-        cvReleaseCapture(&( ((VideoUnderstanding*)arg)->capture));
-    }
-}
 
 int main(){
         printf("INFO:VideoServer  started...\n");
@@ -375,6 +389,12 @@ int main(){
         tv.tv_sec = 1;
         tv.tv_usec = 0;
 
+        pthread_t st;
+        int sthread = pthread_create(&st, NULL, send_thread, NULL);
+        if(sthread < 0){
+            printf("ERROR:send_thread create failed!\n");
+         }
+
         while(1){
                 FD_ZERO(&fdsr);
                 FD_SET(sock_fd, &fdsr);
@@ -383,14 +403,6 @@ int main(){
                     perror("ERROR:Select...\n");
                     continue;
                 } 
-                while(!wmsgq.empty()){
-                    char *msg = wmsgq.pop();
-                    //printf("%s\n",msg);
-                    //printf("======================\n");
-                    if(send(sock_fd, msg, strlen(msg), 0) == -1){
-                        perror("ERROR:Send error\n");
-                    }
-                }
                 if (FD_ISSET(sock_fd, &fdsr)) {
                         ret = recv(sock_fd, buf, MAXDATASIZE, 0);
                         if (ret <= 0) { 
@@ -424,6 +436,7 @@ int DecodeXml(char * buffer){
             if(!strcmp(EnvelopeType, "startdeal")){
                 TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
                 struct vsession * vs = new vsession;
+                memset(vs,0,sizeof(struct vsession));
                 strcpy(vs->warning_type,ProfileNode->FirstChildElement("category")->GetText());
                 strcpy(vs->rtspurl , ProfileNode->FirstChildElement("rtspuri")->GetText());
                 strcpy(vs->mac , ProfileNode->FirstChildElement("mac")->GetText());
@@ -475,8 +488,6 @@ int DecodeXml(char * buffer){
                 }
                 handle->Accept( printer ); 
                 wmsgq.push(const_cast<char *>(printer->CStr()));
-                //printf("%s\n",printer->CStr());
-                //send (sock_fd, const_cast<char *>(printer->CStr()), strlen(const_cast<char *>(printer->CStr())), 0);
             }
         }
     }
