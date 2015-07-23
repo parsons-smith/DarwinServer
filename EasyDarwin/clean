@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -rfv ./*/*.o
+rm -rfv ../*/*.o
+rm -fv DarwinServer

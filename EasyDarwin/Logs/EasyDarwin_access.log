@@ -1,0 +1,20 @@
+#Log File Created On: 07/23/2015 15:24:57
+#Software: DSS
+#Version: 7.0.0
+#Date: 2015-07-23 15:24:57
+#Remark: all time values are in GMT.
+#Fields: c-ip date time c-dns cs-uri-stem c-starttime x-duration c-rate c-status c-playerid c-playerversion c-playerlanguage cs(User-Agent) c-os c-osversion c-cpu filelength filesize avgbandwidth protocol transport audiocodec videocodec sc-bytes cs-bytes c-bytes s-pkts-sent c-pkts-received c-pkts-lost-client c-buffercount c-totalbuffertime c-quality s-ip s-dns s-totalclients s-cpu-util cs-uri-query c-username sc(Realm) 
+#Remark: Streaming beginning STARTUP 2015-07-23 15:24:57
+#Remark: Streaming beginning SHUTDOWN 2015-07-23 15:25:41
+#Remark: Streaming beginning STARTUP 2015-07-23 15:26:06
+#Remark: Streaming beginning SHUTDOWN 2015-07-23 15:27:10
+#Remark: Streaming beginning STARTUP 2015-07-23 15:28:09
+192.168.20.100 2015-07-23 07:28:54 192.168.101.151:554 /cam 1437636533 0 1 404 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 0 RTP - - - 0 0 0 0 0 0 1 0 0 192.168.101.151 192.168.101.151 1 0 - - - 
+#Remark: Streaming beginning SHUTDOWN 2015-07-23 15:29:11
+#Remark: Streaming beginning STARTUP 2015-07-23 15:30:09
+192.168.20.100 2015-07-23 07:31:40 192.168.101.151:554 /demo 3 83 1 200 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 0 RTP UDP - H264/90000 30034217 1136 30034217 8078 0 0 1 3 100 192.168.101.151 192.168.101.151 2 0 - - - 
+192.168.20.100 2015-07-23 07:31:41 192.168.101.151:554 /demo 3 30 1 200 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 2925905 RTP UDP - H264/90000 10925905 320 10925905 2954 0 0 1 3 100 192.168.101.151 192.168.101.151 1 0 - - - 
+192.168.20.100 2015-07-23 07:33:57 192.168.101.151:554 /demo 3 11 1 200 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 2922748 RTP UDP - H264/90000 3831012 192 3831012 1074 0 0 1 3 100 192.168.101.151 192.168.101.151 3 0 - - - 
+192.168.20.100 2015-07-23 07:34:05 192.168.101.151:554 /demo 3 68 1 200 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 0 RTP UDP - H264/90000 24738868 832 24738868 6900 0 0 1 3 100 192.168.101.151 192.168.101.151 2 0 - - - 
+192.168.20.100 2015-07-23 07:34:08 192.168.101.151:554 /demo 3 41 1 200 192.168.20.100 - - LibVLC/2.2.1%20(LIVE555%20Streaming%20Media%20v2014.07.25) - - - 0 0 0 RTP UDP - H264/90000 15075794 512 15075794 4238 0 0 1 3 100 192.168.101.151 192.168.101.151 1 0 - - - 
+#Remark: Streaming beginning SHUTDOWN 2015-07-23 16:03:18
