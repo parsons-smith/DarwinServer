@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="GB2312"?>
-<Devices>
-	<Device id="0" name="cam" url="rtsp://218.204.223.237:554/live/1/0547424F573B085C/gsfp90ef4k0a6iap.sdp"/>
-	<Device id="1" name="camy" url="rtsp://218.204.223.237:554/live/1/66251FC11353191F/e7ooqwcfbqjoo80j.sdp"/>
-	<Device id="2" name="cam" url="rtsp://admin:123456@192.168.1.1:554/mpeg4"/>
-	<Device id="3" name="cam" url="rtsp://admin:123456@192.168.1.1:554/mpeg4"/>
-	<Device id="4" name="cam" url="rtsp://admin:123456@192.168.1.7:554/mpeg4"/>
-</Devices>
