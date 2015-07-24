@@ -47,7 +47,7 @@
 		<PREF NAME="auto_restart" TYPE="Bool16" >true</PREF>
 		<PREF NAME="break_on_assert" TYPE="Bool16" >false</PREF>
 		<PREF NAME="bind_ip_addr" >0</PREF>
-		<PREF NAME="movie_folder" >./Movies</PREF>
+		<PREF NAME="movie_folder" >/video</PREF>
 		<PREF NAME="maximum_bandwidth" TYPE="SInt32" >102400</PREF>
 		<PREF NAME="maximum_connections" TYPE="SInt32" >1000</PREF>
 		<PREF NAME="rtp_timeout" TYPE="UInt32" >120</PREF>
