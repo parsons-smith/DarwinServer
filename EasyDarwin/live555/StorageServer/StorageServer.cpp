@@ -35,10 +35,11 @@ int main()
 	fd_set fdsr;
 	int ret;
 	struct timeval tv;
-	tv.tv_sec = 30;
-	tv.tv_usec = 0;
+
 
 	while (1){
+		tv.tv_sec = 30;
+		tv.tv_usec = 0;
 		FD_ZERO(&fdsr);
 		FD_SET(sock_fd, &fdsr);
 		if (pthread_mutex_lock(&mutex) != 0){
@@ -52,7 +53,6 @@ int main()
 			continue;
 		}
 		if (ret == 0) {
-			sleep(0.1);
 			continue;
 		}
 		if (FD_ISSET(sock_fd, &fdsr)) {

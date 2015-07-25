@@ -48,3 +48,9 @@ chmod +x ./Buildit
 WEB：[www.EasyDarwin.org](http://www.easydarwin.org)
 
 QQ交流群：288214068
+
+
+
+
+Nginx服务器支持
+root dir   /video

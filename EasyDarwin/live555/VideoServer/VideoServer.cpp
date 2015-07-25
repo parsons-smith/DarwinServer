@@ -386,8 +386,7 @@ int main(){
         fd_set fdsr;
         int ret;
         struct timeval tv;
-        tv.tv_sec = 1;
-        tv.tv_usec = 0;
+
 
         pthread_t st;
         int sthread = pthread_create(&st, NULL, send_thread, NULL);
@@ -396,6 +395,8 @@ int main(){
          }
 
         while(1){
+                tv.tv_sec = 30;
+                tv.tv_usec = 0;
                 FD_ZERO(&fdsr);
                 FD_SET(sock_fd, &fdsr);
                 ret = select(sock_fd + 1, &fdsr, NULL, NULL, &tv);
