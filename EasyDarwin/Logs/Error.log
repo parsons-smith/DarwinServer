@@ -54,3 +54,17 @@
 2015-07-30 19:30:18: INFO: Module Loaded...QTSSAccessModule [static]
 2015-07-30 19:30:18: WARNING: No users file found at ./qtusers.
 2015-07-30 19:30:18: WARNING: No groups file found at ./qtgroups.
+# Streaming SHUTDOWN 2015-07-31 10:37:16
+# Streaming STARTUP 2015-07-31 10:39:30
+2015-07-31 10:39:31: WARNING: No module folder exists.
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-31 10:39:31: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-31 10:39:31: WARNING: No users file found at ./qtusers.
+2015-07-31 10:39:31: WARNING: No groups file found at ./qtgroups.
