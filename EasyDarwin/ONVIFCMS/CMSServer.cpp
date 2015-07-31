@@ -17,6 +17,7 @@
 #include <string.h>
 #include "tinyxml/tinyxml.h"
 #include <iostream>
+#include <exception>
 using namespace std;
 
 
@@ -179,194 +180,199 @@ int compare(int a, int b){
 
 
 int xml_decode(char * xml, int sock_fd){
-    if (NULL == xml){
-		cout<<"ERROR:Empty xml message\n";
-		return -1;
-	}
-	handle = new TiXmlDocument();
-	handle->Parse(xml);
-	TiXmlNode* EnvelopeNode = handle->FirstChild("Envelope");
-	const char * EnvelopeType = EnvelopeNode->ToElement()->Attribute("type");
-	if(EnvelopeType != NULL){
-		if(!strcmp(EnvelopeType,"cregister")){
-            //onvif registering
-			onvif_fd = sock_fd;
-			const char* onvif_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_cregister\">success</Envelope>";
-                                        if( send(onvif_fd, onvif_reply , strlen(onvif_reply), 0) == -1) { 
-			 	perror ( "ERROR:Send error" ); 
-			 	return -1;
-			}
-                                        cout<<"INFO: A ONVIF Server found..."<<endl;
-                                        return 0;
-		}else if(!strcmp(EnvelopeType,"pregister")){
-            //proxy registering
-			proxy_fd = sock_fd;
-			const char* proxy_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_pregister\">success</Envelope>";
-                                        if( send(proxy_fd, proxy_reply , strlen(proxy_reply), 0) == -1) { 
-			 	perror ( "ERROR:Send error" ); 
-			 	return -1;
-			}
-                                        cout<<"INFO: A PROXY Server found..."<<endl;
-                                        return 0;
-		}else if(!strcmp(EnvelopeType,"vregister")){
-            //video registering
-			video_fd = sock_fd;
-			const char* video_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_vregister\">success</Envelope>";
-                                        if( send(video_fd, video_reply , strlen(video_reply), 0) == -1) { 
-			 	perror ( "ERROR:Send error" ); 
-			 	return -1;
-			}
-                                        cout<<"INFO: A VIDEO Server found..."<<endl;
-                                        return 0;
-		}else if(!strcmp(EnvelopeType,"sregister")){
-            //storage registering
-			storage_fd = sock_fd;
-			const char* storage_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_sregister\">success</Envelope>";
-                                        if( send(storage_fd, storage_reply , strlen(storage_reply), 0) == -1) { 
-			 	perror ( "ERROR:Send error" );
-			 	return -1;
-			}
-                                        cout<<"INFO: A STORAGE Server found..."<<endl;
-                                        return 0;
-		}else if(!strcmp(EnvelopeType,"getrtspuri")&& compare(sock_fd, onvif_fd)){
-            //to proxy server 
-                                        if(proxy_fd > 0 ){
-                                                    if ( send ( proxy_fd, xml , strlen(xml), 0) == -1) { 
-			 	           perror ( "ERROR:Send error" ); 
-			 	           return -1;
-			             }
+    try{
+        if (NULL == xml){
+    		cout<<"ERROR:Empty xml message\n";
+    		return -1;
+    	}
+    	handle = new TiXmlDocument();
+    	handle->Parse(xml);
+    	TiXmlNode* EnvelopeNode = handle->FirstChild("Envelope");
+    	const char * EnvelopeType = EnvelopeNode->ToElement()->Attribute("type");
+    	if(EnvelopeType != NULL){
+    		if(!strcmp(EnvelopeType,"cregister")){
+                //onvif registering
+    			onvif_fd = sock_fd;
+    			const char* onvif_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_cregister\">success</Envelope>";
+                                            if( send(onvif_fd, onvif_reply , strlen(onvif_reply), 0) == -1) { 
+    			 	perror ( "ERROR:Send error" ); 
+    			 	return -1;
+    			}
+                                            cout<<"INFO: A ONVIF Server found..."<<endl;
+                                            return 0;
+    		}else if(!strcmp(EnvelopeType,"pregister")){
+                //proxy registering
+    			proxy_fd = sock_fd;
+    			const char* proxy_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_pregister\">success</Envelope>";
+                                            if( send(proxy_fd, proxy_reply , strlen(proxy_reply), 0) == -1) { 
+    			 	perror ( "ERROR:Send error" ); 
+    			 	return -1;
+    			}
+                                            cout<<"INFO: A PROXY Server found..."<<endl;
+                                            return 0;
+    		}else if(!strcmp(EnvelopeType,"vregister")){
+                //video registering
+    			video_fd = sock_fd;
+    			const char* video_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_vregister\">success</Envelope>";
+                                            if( send(video_fd, video_reply , strlen(video_reply), 0) == -1) { 
+    			 	perror ( "ERROR:Send error" ); 
+    			 	return -1;
+    			}
+                                            cout<<"INFO: A VIDEO Server found..."<<endl;
+                                            return 0;
+    		}else if(!strcmp(EnvelopeType,"sregister")){
+                //storage registering
+    			storage_fd = sock_fd;
+    			const char* storage_reply = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"r_sregister\">success</Envelope>";
+                                            if( send(storage_fd, storage_reply , strlen(storage_reply), 0) == -1) { 
+    			 	perror ( "ERROR:Send error" );
+    			 	return -1;
+    			}
+                                            cout<<"INFO: A STORAGE Server found..."<<endl;
+                                            return 0;
+    		}else if(!strcmp(EnvelopeType,"getrtspuri")&& compare(sock_fd, onvif_fd)){
+                //to proxy server 
+                                            if(proxy_fd > 0 ){
+                                                        if ( send ( proxy_fd, xml , strlen(xml), 0) == -1) { 
+    			 	           perror ( "ERROR:Send error" ); 
+    			 	           return -1;
+    			             }
+                                                        return 0;
+                                            }else{
+                                            cout<<"WARNING:No proxy server connected, the message will send no place...\n";
+                                            return 0;
+                                            }
+    		}else if(!strcmp(EnvelopeType,"r_getrtspuri")&& compare(sock_fd,proxy_fd)){
+                //to onvif server 
+                                            if(onvif_fd > 0 ){
+                                                if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
+                                	               perror ( "ERROR:Send error" ); 
+                                		  return -1;
+                                	       }
                                                     return 0;
+                                            }else{
+                                                cout<<"WARNING:No onvif server connected, the message will send no place...\n";
+                                                return 0;
+                                            }
+    		}else if(!strcmp(EnvelopeType,"startstorage")&& compare(sock_fd,onvif_fd)){
+    			//to storage server
+                                        if(storage_fd > 0 ){
+                                            if ( send ( storage_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
                                         }else{
-                                        cout<<"WARNING:No proxy server connected, the message will send no place...\n";
-                                        return 0;
+                                            cout<<"WARNING:No storage server connected, the message will send no place...\n";
+                                            return 0;
                                         }
-		}else if(!strcmp(EnvelopeType,"r_getrtspuri")&& compare(sock_fd,proxy_fd)){
-            //to onvif server 
+    		}else if(!strcmp(EnvelopeType,"r_startstorage")&& compare(sock_fd, storage_fd)){
+    			//to onvif server
                                         if(onvif_fd > 0 ){
                                             if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                            	               perror ( "ERROR:Send error" ); 
-                            		  return -1;
-                            	       }
-                                                return 0;
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
                                         }else{
                                             cout<<"WARNING:No onvif server connected, the message will send no place...\n";
                                             return 0;
                                         }
-		}else if(!strcmp(EnvelopeType,"startstorage")&& compare(sock_fd,onvif_fd)){
-			//to storage server
-                                    if(storage_fd > 0 ){
-                                        if ( send ( storage_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No storage server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"r_startstorage")&& compare(sock_fd, storage_fd)){
-			//to onvif server
-                                    if(onvif_fd > 0 ){
-                                        if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No onvif server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"stopstorage")&& compare(sock_fd, onvif_fd)){
-			//to storage server
-                                    if(storage_fd > 0 ){
-                                        if ( send ( storage_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No storage server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"r_stopstorage")&& compare(sock_fd, storage_fd)){
-			//to onvif server
-                                    if(onvif_fd > 0 ){
-                                        if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No onvif server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"startdeal")&& compare(sock_fd, onvif_fd)){
-			//to video server
-                                    if(video_fd > 0 ){
-                                        if ( send ( video_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No video server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"r_startdeal")&& compare(sock_fd, video_fd)){
-			//to onvif server
-                                    if(onvif_fd > 0 ){
-                                        if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No onvif server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"stopdeal")&& compare(sock_fd, onvif_fd)){
-			//to video server
-                                    if(video_fd > 0 ){
-                                        if ( send ( video_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No video server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"r_stopdeal")&& compare(sock_fd, video_fd)){
-			//to onvif server
-                                    if(onvif_fd > 0 ){
-                                        if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No onvif server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else if(!strcmp(EnvelopeType,"warning")&& compare(sock_fd, video_fd)){
-			//to onvif server
-                                    if(onvif_fd > 0 ){
-                                        if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
-                        			 	   perror ( "ERROR:Send error" ); 
-                        			 	   return -1;
-                        			    }
-                                        return 0;
-                                    }else{
-                                        cout<<"WARNING:No onvif server connected, the message will send no place...\n";
-                                        return 0;
-                                    }
-		}else{
-            cout<<"WARNING:Received a unrecgonized type message\n";
-            return -1;
+    		}else if(!strcmp(EnvelopeType,"stopstorage")&& compare(sock_fd, onvif_fd)){
+    			//to storage server
+                                        if(storage_fd > 0 ){
+                                            if ( send ( storage_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No storage server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"r_stopstorage")&& compare(sock_fd, storage_fd)){
+    			//to onvif server
+                                        if(onvif_fd > 0 ){
+                                            if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No onvif server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"startdeal")&& compare(sock_fd, onvif_fd)){
+    			//to video server
+                                        if(video_fd > 0 ){
+                                            if ( send ( video_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No video server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"r_startdeal")&& compare(sock_fd, video_fd)){
+    			//to onvif server
+                                        if(onvif_fd > 0 ){
+                                            if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No onvif server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"stopdeal")&& compare(sock_fd, onvif_fd)){
+    			//to video server
+                                        if(video_fd > 0 ){
+                                            if ( send ( video_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No video server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"r_stopdeal")&& compare(sock_fd, video_fd)){
+    			//to onvif server
+                                        if(onvif_fd > 0 ){
+                                            if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No onvif server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else if(!strcmp(EnvelopeType,"warning")&& compare(sock_fd, video_fd)){
+    			//to onvif server
+                                        if(onvif_fd > 0 ){
+                                            if ( send ( onvif_fd, xml , strlen(xml), 0) == -1) { 
+                            			 	   perror ( "ERROR:Send error" ); 
+                            			 	   return -1;
+                            			    }
+                                            return 0;
+                                        }else{
+                                            cout<<"WARNING:No onvif server connected, the message will send no place...\n";
+                                            return 0;
+                                        }
+    		}else{
+                cout<<"WARNING:Received a unrecgonized type message\n";
+                return -1;
+            }
         }
-	}
-    cout<<"WARNING:Received a unrecgonized message\n";
-	return -1;
+        cout<<"WARNING:Received a unrecgonized message\n";
+        return -1;
+    }catch(exception &e){
+        perror("ERROR:error while decoding xml\n");
+        return -1;
+    }
 }
 
 
