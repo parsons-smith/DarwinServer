@@ -180,7 +180,6 @@ int compare(int a, int b){
 
 
 int xml_decode(char * xml, int sock_fd){
-    try{
         if (NULL == xml){
     		cout<<"ERROR:Empty xml message\n";
     		return -1;
@@ -369,10 +368,6 @@ int xml_decode(char * xml, int sock_fd){
         }
         cout<<"WARNING:Received a unrecgonized message\n";
         return -1;
-    }catch(exception &e){
-        perror("ERROR:error while decoding xml\n");
-        return -1;
-    }
 }
 
 

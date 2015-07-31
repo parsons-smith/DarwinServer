@@ -68,3 +68,50 @@
 2015-07-31 10:39:31: INFO: Module Loaded...QTSSAccessModule [static]
 2015-07-31 10:39:31: WARNING: No users file found at ./qtusers.
 2015-07-31 10:39:31: WARNING: No groups file found at ./qtgroups.
+# Streaming STARTUP 2015-07-31 10:57:46
+2015-07-31 10:57:46: WARNING: Another process is already using the following RTSP port: 8554
+2015-07-31 10:57:46: WARNING: Streaming Server failed to listen on all requested RTSP port(s).
+2015-07-31 10:57:46: WARNING: Streaming Server is not listening for RTSP on any ports.
+# Streaming SHUTDOWN 2015-07-31 10:57:46
+# Streaming STARTUP 2015-07-31 10:58:11
+2015-07-31 10:58:11: WARNING: Another process is already using the following RTSP port: 8554
+2015-07-31 10:58:11: WARNING: Streaming Server failed to listen on all requested RTSP port(s).
+2015-07-31 10:58:11: WARNING: Streaming Server is not listening for RTSP on any ports.
+# Streaming SHUTDOWN 2015-07-31 10:58:11
+# Streaming STARTUP 2015-07-31 10:58:39
+2015-07-31 10:58:40: WARNING: No module folder exists.
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-31 10:58:40: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-31 10:58:40: WARNING: No users file found at ./qtusers.
+2015-07-31 10:58:40: WARNING: No groups file found at ./qtgroups.
+# Streaming STARTUP 2015-07-31 11:04:22
+2015-07-31 11:04:22: WARNING: Another process is already using the following RTSP port: 8554
+2015-07-31 11:04:22: WARNING: Streaming Server failed to listen on all requested RTSP port(s).
+2015-07-31 11:04:22: WARNING: Streaming Server is not listening for RTSP on any ports.
+# Streaming SHUTDOWN 2015-07-31 11:04:22
+# Streaming STARTUP 2015-07-31 11:04:46
+2015-07-31 11:04:46: WARNING: Another process is already using the following RTSP port: 8554
+2015-07-31 11:04:46: WARNING: Streaming Server failed to listen on all requested RTSP port(s).
+2015-07-31 11:04:46: WARNING: Streaming Server is not listening for RTSP on any ports.
+# Streaming SHUTDOWN 2015-07-31 11:04:46
+# Streaming STARTUP 2015-07-31 11:05:09
+2015-07-31 11:05:10: WARNING: No module folder exists.
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSFileModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSReflectorModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSOnDemandRelayModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSAccessLogModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSFlowControlModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSPosixFileSysModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSAdminModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSMP3StreamingModule [static]
+2015-07-31 11:05:10: INFO: Module Loaded...QTSSAccessModule [static]
+2015-07-31 11:05:10: WARNING: No users file found at ./qtusers.
+2015-07-31 11:05:10: WARNING: No groups file found at ./qtgroups.
+2015-07-31 11:06:58: ASSERT: _Assert: OSRef.cpp, 41

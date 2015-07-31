@@ -16,7 +16,6 @@ using namespace std;
 typedef map<std::string, DeviceInfo*> DeviceMap;
 
 DeviceMap g_deviceMap;
-pthread_mutex_t dmt = PTHREAD_MUTEX_INITIALIZER;
 int cms_fd = -1;
 TiXmlElement* spElement = NULL;
 const char* szXmlValue = NULL;
@@ -30,9 +29,7 @@ char desturl[500];
 
 CParseDevice::CParseDevice()
 {
-	pthread_mutex_lock(&dmt);
 	g_deviceMap.clear();
-	pthread_mutex_unlock(&dmt);
 }
 
 CParseDevice::~CParseDevice()
@@ -52,7 +49,6 @@ void CParseDevice::Uninit()
 
 void CParseDevice::Clear()
 {
-	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.begin();
 	for (; deviceIter != g_deviceMap.end(); deviceIter++)
 	{
@@ -60,13 +56,11 @@ void CParseDevice::Clear()
 	}
 
 	g_deviceMap.clear();
-	pthread_mutex_unlock(&dmt);
 }
 
 int32_t CParseDevice::AddDevice(DeviceInfo& deviceInfo)
 {
 	//check Id
-	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.find(deviceInfo.m_szSourceUrl);
 	if (deviceIter != g_deviceMap.end())
 	{
@@ -118,7 +112,6 @@ int32_t CParseDevice::AddDevice(DeviceInfo& deviceInfo)
 
 	//insert
 	g_deviceMap.insert(make_pair(pDeviceInfo->m_szSourceUrl, pDeviceInfo));
-	pthread_mutex_unlock(&dmt);
 	return success;
 }
 /*
@@ -302,7 +295,6 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 
 DeviceInfo* CParseDevice::GetDeviceInfoByIdName(const char *pszIdName)
 {
-	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.begin();
 	for (; deviceIter != g_deviceMap.end(); deviceIter++)
 	{
@@ -317,7 +309,5 @@ DeviceInfo* CParseDevice::GetDeviceInfoByIdName(const char *pszIdName)
 			return pDeviceInfo;
 		}
 	}
-	pthread_mutex_unlock(&dmt);
-
 	return NULL;
 }
