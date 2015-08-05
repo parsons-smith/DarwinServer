@@ -17,11 +17,10 @@
 #include <opencv/cxcore.h>
 #include <opencv/highgui.h>
 #include <stdlib.h>
-#include "tinyxml/tinyxml.h"
-#include "tinyxml/tinystr.h"
-#include <libxml/parser.h>
+#include "tinyxml.h"
+#include "tinystr.h"
 #include <pthread.h>
-#include "MutexQueue.cpp"
+#include "MutexQueue.h"
 #include <exception>
 #include <iostream>
 using namespace std;
@@ -299,8 +298,9 @@ int VideoUnderstanding::sendstartreply(const char * msg){
 
 void *send_thread(void * st){
     while(true){
-            sleep(1);
+        sleep(1);
                 while(!wmsgq.empty()){
+                    usleep(10);
                     char *msg = wmsgq.pop();
                     //printf("%s\n",msg);
                     //printf("======================\n");
@@ -324,7 +324,6 @@ void *run_thread(void * lw){
         }else{
                 ((VideoUnderstanding*)lw)->sendstartreply("success");
                 videoSession->Add(((VideoUnderstanding*)lw)->vs->rtspurl, (void *)lw);
-                printf("XXXXXXXXXXXXXXXXXX\n");
         }
         try{
                 if(((VideoUnderstanding*)lw)->capture ){
@@ -488,7 +487,10 @@ int DecodeXml(char * buffer){
                     printf("INFO:Action fail\n");
                 }
                 handle->Accept( printer ); 
-                wmsgq.push(const_cast<char *>(printer->CStr()));
+                char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+                memset(replybuffer,0,sizeof(char) * MAXDATASIZE);
+                strcpy(replybuffer, const_cast<char *>(printer->CStr()));
+                wmsgq.push(replybuffer);
             }
         }
     }

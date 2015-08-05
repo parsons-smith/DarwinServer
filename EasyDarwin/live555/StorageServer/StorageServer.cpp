@@ -1,17 +1,8 @@
-/*��·�洢������
- ���ڣ�20150125
- */
 #include "ourRTSPClient.cpp"
 using namespace std;
 
-#define CMS_SERVER_IP "127.0.0.1"
-#define CMS_SERVER_PORT 8000
-const char * registermsg = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"sregister\"></Envelope>";
 int DecodeXml(char * buffer);
-
-int cms_fd = -1;
-char buf[MAXDATASIZE];
-
+void *send_thread(void * st);
 
 int main()
 {
@@ -31,23 +22,23 @@ int main()
 	if (send(sock_fd, registermsg, strlen(registermsg), 0) == -1) {
 		perror("ERROR:Send error\n");
 	}
+	pthread_t st;
+	int sthread = pthread_create(&st, NULL, send_thread, NULL);
+	if(sthread < 0){
+		printf("ERROR:send_thread create failed!\n");
+	}
+
 
 	fd_set fdsr;
 	int ret;
 	struct timeval tv;
-
 
 	while (1){
 		tv.tv_sec = 30;
 		tv.tv_usec = 0;
 		FD_ZERO(&fdsr);
 		FD_SET(sock_fd, &fdsr);
-		if (pthread_mutex_lock(&mutex) != 0){
-			printf("ERROR:Thread lock failed!\n");
-			continue;
-		}
 		ret = select(sock_fd + 1, &fdsr, NULL, NULL, &tv);
-		pthread_mutex_unlock(&mutex);
 		if (ret < 0) {
 			perror("ERROR:Select...\n");
 			continue;
@@ -56,19 +47,14 @@ int main()
 			continue;
 		}
 		if (FD_ISSET(sock_fd, &fdsr)) {
-			if (pthread_mutex_lock(&mutex) != 0){
-				printf("ERROR:Thread lock failed!\n");
-				continue;
-			}
+
 			ret = recv(sock_fd, buf, MAXDATASIZE, 0);
 			if (ret <= 0) {
 				printf("ERROR:Socket closed...\n");
 				FD_CLR(sock_fd, &fdsr);
-				pthread_mutex_unlock(&mutex);
 				break;
 			}
 			else {        // receive data
-				pthread_mutex_unlock(&mutex);
 				buf[ret] = '\0';
 				DecodeXml(buf);
 			}
@@ -79,120 +65,88 @@ int main()
 }
 
 int DecodeXml(char * buffer){
-	xmlDocPtr doc = xmlParseMemory(buffer, strlen(buffer));
-	if (doc == NULL){
-		return -1;
-	}
-	xmlNodePtr curNode = xmlDocGetRootElement(doc); //get root element
-	if (curNode == NULL){
-		xmlFreeDoc(doc);
-		return -2;
-	}
-	if (xmlStrcmp(curNode->name, BAD_CAST "Envelope")){  //ƥ��Envelope
-		xmlFreeDoc(doc);
-		return -3;
-	}
-	if (xmlHasProp(curNode, BAD_CAST "type")){
-		xmlChar * szAttr = xmlGetProp(curNode, BAD_CAST "type");
-		if (!xmlStrcmp(szAttr, BAD_CAST "r_sregister")){  //ƥ��cmsregister
+	TiXmlDocument *handle = new TiXmlDocument();
+	TiXmlPrinter *printer = new TiXmlPrinter();
+	handle->Parse(buffer);
+	TiXmlNode* EnvelopeNode = handle->FirstChild("Envelope");
+	const char * EnvelopeType = EnvelopeNode->ToElement()->Attribute("type");
+	if(EnvelopeType != NULL){
+		if(!strcmp(EnvelopeType,"r_sregister")){
 			cms_fd = sock_fd;
-			cout << "INFO:StorageServer registered to a CMSServer...\n" << endl;
-		}
-
-		if (sock_fd != cms_fd){
-			cout << "WARNING:got a unregistered message..." << endl;
-		}
-		else{
-
-			if (!xmlStrcmp(szAttr, BAD_CAST "startstorage")){ 
-				xmlNodePtr sNode = curNode->xmlChildrenNode;
-				struct ssession *ss = (struct ssession *)malloc(sizeof(struct ssession));
-				while (sNode != NULL){
-					if (!xmlStrcmp(sNode->name, BAD_CAST "profile")){
-						xmlNodePtr cNode = sNode->xmlChildrenNode;
-						//cout << sNode->name <<endl;
-						while (cNode != NULL){
-							if (!xmlStrcmp(cNode->name, BAD_CAST "deviceip")){
-								strcpy(ss->deviceip, (char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "mac")){
-								strcpy(ss->mac, (char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "cfd")){
-								strcpy(ss->cfd, (char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "rtspuri")){
-								strcpy(ss->rtspurl, (char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "height")){
-								ss->height = atoi((char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "width")){
-								ss->width = atoi((char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "split")){
-								fileOutputIntervalset = atoi((char *)xmlNodeGetContent(cNode));
-							}
-							if (!xmlStrcmp(cNode->name, BAD_CAST "format")){
-								filename_suffix = (char *)xmlNodeGetContent(cNode);
-							}
-							cNode = cNode->next;
-						}
-						if (lookupClientByRTSPURL(ss->rtspurl) == NULL){
-							ourRTSPClient* rtspClient = ourRTSPClient::createNew(ss, RTSP_CLIENT_VERBOSITY_LEVEL, progName);
-							rtspClient->run();
-						}
-					}
-					sNode = sNode->next;
+			cout << "INFO:StorageServer registered to a CMSServer...\n"<<endl;
+		 }
+		if(cms_fd != sock_fd){
+			cout << "WARNING:got a unregistered message..." <<endl;
+		}else{
+			if(!strcmp(EnvelopeType, "startstorage")){
+				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
+				//struct ssession *ss = (struct ssession *)malloc(sizeof(struct ssession));
+				struct ssession * ss = new ssession;
+				memset(ss,0,sizeof(struct ssession));
+				strcpy(ss->deviceip,ProfileNode->FirstChildElement("deviceip")->GetText());
+				strcpy(ss->mac , ProfileNode->FirstChildElement("mac")->GetText());
+				strcpy(ss->cfd , ProfileNode->FirstChildElement("cfd")->GetText());
+				strcpy(ss->rtspurl , ProfileNode->FirstChildElement("rtspuri")->GetText());
+				ss->height = (int )atof(ProfileNode->FirstChildElement("height")->GetText());
+				ss->width = (int )atof(ProfileNode->FirstChildElement("width")->GetText());
+				fileOutputIntervalset = (int )atof(ProfileNode->FirstChildElement("split")->GetText());
+				filename_suffix = ProfileNode->FirstChildElement("format")->GetText();
+				ourRTSPClient* rtspClient = lookupClientByRTSPURL(ss->rtspurl);
+				if (rtspClient == NULL){
+					ourRTSPClient* rtspClient = ourRTSPClient::createNew(ss, RTSP_CLIENT_VERBOSITY_LEVEL, progName);
+					rtspClient->run();
+				}else{
+					cout<<"INFO:"<<ss->rtspurl<<" exist, stop it first..."<<endl;
+					rtspClient->sendstartreply("exist");
 				}
-
 			}
-			if (!xmlStrcmp(szAttr, BAD_CAST "stopstorage")){  
-				xmlSetProp(curNode, (const xmlChar*)"type", (const xmlChar*)"r_stopstorage"); 
-				xmlNodePtr sNode = curNode->xmlChildrenNode;
-				while (sNode != NULL){
-					if (!xmlStrcmp(sNode->name, BAD_CAST "profile")){
-						xmlNodePtr cNode = sNode->xmlChildrenNode;
-						//cout << sNode->name <<endl;
-						while (cNode != NULL){
-							if (!xmlStrcmp(cNode->name, BAD_CAST "rtspuri")){
-								//cout <<"\t"<< cNode->name << " : "<<xmlNodeGetContent(cNode) <<endl;
-								ourRTSPClient* rtspClient = lookupClientByRTSPURL((char *)xmlNodeGetContent(cNode));
-								if (rtspClient != NULL){
-									if (rtspClient->stop() >= 0){
-										printf("INFO:Stop storage success...\n");
-										xmlNewChild(sNode,NULL,(xmlChar *) "action",(xmlChar *) "success");
-									}
-									else{
-										printf("INFO:Stop storage failed...\n");
-										xmlNewChild(sNode,NULL,(xmlChar *) "action",(xmlChar *) "fail");
-									}
-								}
-								else{
-									printf("WARNING: %s didn't exist...\n", (char *)xmlNodeGetContent(cNode));
-									xmlNewChild(sNode,NULL,(xmlChar *) "action",(xmlChar *) "exception");
-								}
-							}
-							cNode = cNode->next;
-						}
+			if(!strcmp(EnvelopeType, "stopstorage")){
+				EnvelopeNode->ToElement()->SetAttribute("type", "r_stopstorage");
+				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
+				const char * rtsp = ProfileNode->FirstChildElement("rtspuri")->GetText();
+				TiXmlElement *action = new TiXmlElement("action");  
+				ProfileNode->LinkEndChild(action);  
+				ourRTSPClient* rtspClient = lookupClientByRTSPURL(rtsp);
+				if (rtspClient != NULL){
+					if (rtspClient->stop() >= 0){
+						printf("INFO:Stop storage success...\n");
+						TiXmlText *actionvalue = new TiXmlText("success");  
+						action->LinkEndChild(actionvalue); 
+					}else{
+						printf("INFO:Stop storage failed...\n");
+						TiXmlText *actionvalue = new TiXmlText("fail");  
+						action->LinkEndChild(actionvalue); 
 					}
-					sNode = sNode->next;
+				}else{
+					printf("WARNING: %s didn't exist...\n", rtsp);
+					TiXmlText *actionvalue = new TiXmlText("exception");  
+					action->LinkEndChild(actionvalue); 
 				}
-				xmlFree(sNode);
-			           xmlChar *xml_buff;
-			           int size;
-			           xmlDocDumpMemory(doc,&xml_buff,&size);
-			           //printf("%s-----%d\n",(char *)xml_buff,size);
-			           if (send ( sock_fd, (char*)xml_buff , strlen((char*)xml_buff), 0) == - 1) { 
-			                    perror ( "send error" ); 
-			           } 
+				handle->Accept( printer ); 
+				char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+				memset(replybuffer,0,sizeof(char) * MAXDATASIZE);
+				strcpy(replybuffer, const_cast<char *>(printer->CStr()));
+				smsgq.push(replybuffer);
 			}
-
 		}
-		xmlFree(szAttr);
 	}
-	xmlFreeDoc(doc);
+	delete handle;
+	delete printer;
 	return 0;
 }
 
 
+
+void *send_thread(void * st){
+    while(true){
+        sleep(1);
+                while(!smsgq.empty()){
+                    usleep(10);
+                    char *msg = smsgq.pop();
+                    if(send(sock_fd, msg, strlen(msg), 0) == -1){
+                        perror("ERROR:Send error\n");
+                    }
+                    delete [] msg;
+                }
+            }
+}

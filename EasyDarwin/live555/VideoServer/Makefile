@@ -30,12 +30,11 @@ UNICAST_APPS = $(UNICAST_RECEIVER_APPS)
 PREFIX = /usr/local
 ALL = $(UNICAST_RECEIVER_APPS)
 
-TINYOBJS = tinystr.$(OBJ) tinyxml.$(OBJ) tinyxmlerror.$(OBJ) tinyxmlparser.$(OBJ) MutexQueue.$(OBJ)
+TINYOBJS = tinystr.$(OBJ) tinyxml.$(OBJ) tinyxmlerror.$(OBJ) tinyxmlparser.$(OBJ) 
 
 all: $(TINYOBJS) $(ALL)  
 
-MutexQueue.$(OBJ): MutexQueue.h
-	g++ -c MutexQueue.cpp
+
 tinyxml.$(OBJ):	tinyxml.h
 	g++ -c tinyxml.cpp tinyxml.h
 tinystr.$(OBJ): tinystr.h

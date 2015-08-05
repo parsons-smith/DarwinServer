@@ -10,7 +10,6 @@
 #include <netinet/in.h> 
 #include <arpa/inet.h>
 #include <iostream>
-#include <libxml/parser.h>
 #include <string.h>
 #include <stdlib.h>  
 #include <errno.h>  
@@ -22,27 +21,35 @@
 #include <sys/stat.h>  
 #include <mysql/mysql.h>
 #include <time.h>
+#include "MutexQueue.h"
+#include "tinyxml.h"
+#include "tinystr.h"
 using namespace std;
 
 #define MYSQL_SERVER_IP "192.168.101.149"
 #define MYSQL_USERNAME "root"
 #define MYSQL_PASSWORD "lunax"
 #define MYSQL_DATABSE "lunaxweb"
-
+#define CMS_SERVER_IP "127.0.0.1"
+#define CMS_SERVER_PORT 8000
 #define MODE (S_IRWXU | S_IRWXG | S_IRWXO)  
 #define ROOTDIR  "/video/"
 #define MAXDATASIZE 4096
+#define RTSP_CLIENT_VERBOSITY_LEVEL 1 
+#define REQUEST_STREAMING_OVER_TCP False 
+const char * registermsg = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"sregister\"></Envelope>";
+int cms_fd = -1;
+char buf[MAXDATASIZE];
+
 int numbytes, sock_fd;
 struct sockaddr_in server_addr;
-pthread_mutex_t mutex;  //sock_fd
+MutexQueue<char *> smsgq;
 
 
 const char * progName = "Lunax";
 unsigned fileSinkBufferSize0 = 300000;
 Boolean outPutAviFile = false;
 int fileOutputIntervalset = 10;
-#define RTSP_CLIENT_VERBOSITY_LEVEL 1 
-#define REQUEST_STREAMING_OVER_TCP False 
 HashTable * fRtspClient = HashTable::create(0); 
 const char * filename_prefix = "";
 const char * filename_suffix = "mp4";
@@ -119,7 +126,6 @@ public:
 };
 
 
-int mutex_send(char * buffer);
 int MkDir(char *dir);
 //void *run_thread(void * orc);
 ourRTSPClient * lookupClientByRTSPURL(const char * rtspurl);
@@ -356,9 +362,8 @@ void ourRTSPClient::stopStorage(){
 	strftime(datebuf, 50, "%F", this->starttime);
 	strftime(timebuf, 50, "%X", this->starttime);
 
-	//printf("flag\n");
 	struct tm *endtime;
-	char path[200], sqlbuf[500], /*cmd[500], */ip[20], vn[200], url[200], endtimebuf[128];
+	char path[200], sqlbuf[500], ip[20], vn[200], url[200], endtimebuf[128];
 	time_t lt;
 	time(&lt);
 	endtime = localtime(&lt);
@@ -385,25 +390,7 @@ void ourRTSPClient::stopStorage(){
 		printf("INFO:Insert record to mysql success...\n");
 	}
 	mysql_close(&sql_ins);
-	/*
-	memset(cmd, 0, strlen(cmd));
-	sprintf(cmd, "mp4creator --list /video/%s/%s/%s ", ip, datebuf, vn);
-	system(cmd);
-	
-	memset(cmd, 0, strlen(cmd));
-	sprintf(cmd, "mp4creator -hint=`mp4creator --list /video/%s/%s/%s | awk '{print $1}' | sed -n '2,2p'` /video/%s/%s/%s", ip, datebuf, vn, ip, datebuf, vn);
-
-	//printf("Hint CMD:%s\n",cmd);
-	if (system(cmd) == -1){
-		perror("ERROR:Hint file failed...\n");
-	}
-	else{
-		printf("INFO:Hint mp4 file success...\n");
-	}
-	*/
-	//printf("%s\n",url);
 	fRtspClient->Remove(url);
-	//printf("----------\n");
 }
 
 int ourRTSPClient::run(){
@@ -437,13 +424,10 @@ int ourRTSPClient::sendstartreply(const char * msg){
                                                 <action>%s</action> \
                                         </profile> \
                                 </Envelope>";
-        char replybuffer[MAXDATASIZE];
-        sprintf(replybuffer, startreplystl, ss->mac, ss->cfd, ss->deviceip, ss->rtspurl, msg);
-        if(mutex_send(replybuffer) >= 0){
-                return 0;
-        }else{
-                return -1;
-        }
+	char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+	sprintf(replybuffer, startreplystl, ss->mac, ss->cfd, ss->deviceip, ss->rtspurl, msg);
+	smsgq.push(replybuffer);
+	return 0;
 }
 
 void *ourRTSPClient::run_thread(void * orc){
@@ -464,7 +448,6 @@ UsageEnvironment& operator<<(UsageEnvironment& env, const MediaSubsession& subse
 	return env << subsession.mediumName() << "/" << subsession.codecName();
 }
 
-//RTSP��Ӧ�¼���ʵ��
 void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString) {
 	do {
 		UsageEnvironment& env = rtspClient->envir(); // alias
@@ -675,19 +658,6 @@ void sessionAfterPlaying0(void *rtspClient) {
 		((ourRTSPClient*)rtspClient)->initialSeekTime0,
 		((ourRTSPClient*)rtspClient)->endTime0,
 		((ourRTSPClient*)rtspClient)->scale0, NULL);
-}
-
-int mutex_send(char * buffer){
-	if (pthread_mutex_lock(&mutex) != 0){
-		printf("ERROR:Thread lock failed!\n");
-		return -1;
-	}
-	if (send(sock_fd, buffer, strlen(buffer), 0) == -1 || sock_fd < 0) {
-		perror("ERROR:Send error\n");
-		return -1;
-	}
-	pthread_mutex_unlock(&mutex);
-	return 0;
 }
 
 int MkDir(char *dir)

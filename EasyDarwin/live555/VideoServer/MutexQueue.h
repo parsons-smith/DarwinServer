@@ -1,4 +1,4 @@
-#include<pthread.h>
+#include <pthread.h>
 
 template <class T>
 struct NODE{
@@ -24,3 +24,6 @@ private:
 	NODE<T>* rear;
 	pthread_mutex_t mutex;
 };
+
+
+#include "MutexQueue.cpp"

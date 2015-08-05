@@ -27,15 +27,28 @@ EXE =
 UNICAST_RECEIVER_APPS = StorageServer$(EXE)
 UNICAST_APPS = $(UNICAST_RECEIVER_APPS)
 
+
+
+TINYOBJS = tinystr.$(OBJ) tinyxml.$(OBJ) tinyxmlerror.$(OBJ) tinyxmlparser.$(OBJ) 
 PREFIX = /usr/local
 ALL = $(UNICAST_RECEIVER_APPS)
-all: $(ALL)
+all:  $(TINYOBJS)  $(ALL)
+
+
+tinyxml.$(OBJ):	tinyxml.h
+	g++ -c tinyxml.cpp tinyxml.h
+tinystr.$(OBJ): tinystr.h
+	g++ -c tinystr.cpp tinystr.h
+tinyxmlerror.$(OBJ):
+	g++ -c tinyxmlerror.cpp
+tinyxmlparser.$(OBJ):
+	g++ -c tinyxmlparser.cpp
 
 
 .$(C).$(OBJ):
 	$(C_COMPILER) -c $(C_FLAGS) $<
 .$(CPP).$(OBJ):
-	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
+	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS)  $(TINYOBJS)  $<
 
 STORAGE_SERVER_OBJS    = StorageServer.$(OBJ)
 
@@ -52,8 +65,8 @@ LOCAL_LIBS =	$(LIVEMEDIA_LIB) $(GROUPSOCK_LIB) \
 LIBS =			$(LOCAL_LIBS) $(LIBS_FOR_CONSOLE_APPLICATION)
 
 
-StorageServer$(EXE):	$(STORAGE_SERVER_OBJS) $(LOCAL_LIBS)
-	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(STORAGE_SERVER_OBJS) $(LIBS) -pthread -lxml2 -lmysqlclient
+StorageServer$(EXE):	$(STORAGE_SERVER_OBJS) $(LOCAL_LIBS) $(TINYOBJS)
+	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(STORAGE_SERVER_OBJS) $(TINYOBJS) $(LIBS) -pthread -lxml2 -lmysqlclient
 
 
 clean:
