@@ -217,9 +217,7 @@ QTSS_Error Initialize(QTSS_Initialize_Params* inParams)
 QTSS_Error RereadPrefs()
 {
 	delete [] sDevicePrefs;
-    
-    sDevicePrefs = QTSSModuleUtils::GetStringAttribute(sPrefs, "device_prefs_file", sDefaultDevicePrefs);
-
+	sDevicePrefs = QTSSModuleUtils::GetStringAttribute(sPrefs, "device_prefs_file", sDefaultDevicePrefs);
 	parseDevice = NEW CParseDevice();
 	if (success != parseDevice->Init())
 	{
@@ -231,11 +229,10 @@ QTSS_Error RereadPrefs()
 	{
 		qtss_printf("ERROR:parseDevice LoadDeviceXml %s fail\n", sDevicePrefs);
 	}
-            int lthread = pthread_create(&lpt, NULL, ListeningThread, NULL);
-            if(lthread < 0){
-                qtss_printf("ERROR:Listen thread create failed!\n");
-            }
-
+	int lthread = pthread_create(&lpt, NULL, ListeningThread, NULL);
+	if(lthread < 0){
+		qtss_printf("ERROR:Listen thread create failed!\n");
+	}
 	return QTSS_NoErr;
 }
 

@@ -10,6 +10,7 @@
 #include <netinet/in.h> 
 #include <arpa/inet.h>
 #include <exception>
+#include <pthread.h>
 
 using namespace std;
 
@@ -17,15 +18,9 @@ typedef map<std::string, DeviceInfo*> DeviceMap;
 
 DeviceMap g_deviceMap;
 int cms_fd = -1;
-TiXmlElement* spElement = NULL;
-const char* szXmlValue = NULL;
+
 int rtspcount = 0;
-char ipbuffer[100];
-TiXmlDocument* handle;
-TiXmlPrinter *printer;
-socklen_t len; 
-struct sockaddr_in addr; 
-char desturl[500];
+pthread_mutex_t dmt; 
 
 CParseDevice::CParseDevice()
 {
@@ -39,32 +34,37 @@ CParseDevice::~CParseDevice()
 
 int32_t CParseDevice::Init()
 {
+	pthread_mutex_init(&dmt, NULL);
 	return success;
 }
 
 void CParseDevice::Uninit()
 {
+	pthread_mutex_destroy(&dmt);
 	Clear();
 }
 
 void CParseDevice::Clear()
 {
+	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.begin();
 	for (; deviceIter != g_deviceMap.end(); deviceIter++)
 	{
 		delete (*deviceIter).second;
 	}
-
 	g_deviceMap.clear();
+	pthread_mutex_unlock(&dmt);
 }
 
 int32_t CParseDevice::AddDevice(DeviceInfo& deviceInfo)
 {
 	//check Id
+	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.find(deviceInfo.m_szSourceUrl);
 	if (deviceIter != g_deviceMap.end())
 	{
 		printf("INFO::%s exsit\n",deviceInfo.m_szSourceUrl);
+		pthread_mutex_unlock(&dmt);
 		return success;
 	}
 
@@ -72,46 +72,9 @@ int32_t CParseDevice::AddDevice(DeviceInfo& deviceInfo)
 	DeviceInfo* pDeviceInfo = new DeviceInfo;
 	*pDeviceInfo = deviceInfo;
 
-	//bool bHasUserInfo = false;
-	//if ((0 != strlen(deviceInfo.m_szUser)) && (0 != strlen(deviceInfo.m_szPassword)))
-	//{
-	//	bHasUserInfo = true;
-	//}
-
-	//if (0 == strcmp("DH", deviceInfo.m_szIdentifier))
-	//{
-	//	if (deviceInfo.m_nRate)
-	//	{
-	//		sprintf(pDeviceInfo->m_szSourceUrl, "rtsp://%s:%d/cam/realmonitor?channel=2&subtype=1", deviceInfo.m_szIP, deviceInfo.m_nPort);
-	//	} 
-	//	else
-	//	{
-	//		sprintf(pDeviceInfo->m_szSourceUrl, "rtsp://%s:%d/cam/realmonitor?channel=2&subtype=0", deviceInfo.m_szIP, deviceInfo.m_nPort);
-	//	}
-	//}
-	//else if (0 == strcmp("HK", deviceInfo.m_szIdentifier))
-	//{
-	//	if (deviceInfo.m_nRate)
-	//	{
-	//		sprintf(pDeviceInfo->m_szSourceUrl, "rtsp://%s:%d/h264/ch1/main/av_stream", deviceInfo.m_szIP, deviceInfo.m_nPort);
-	//	} 
-	//	else
-	//	{
-	//		sprintf(pDeviceInfo->m_szSourceUrl, "rtsp://%s:%d/h264/ch1/sub/av_stream", deviceInfo.m_szIP, deviceInfo.m_nPort);
-	//	}
-	//}
-	//else 
-	//{
-	//	delete pDeviceInfo;
-
-	//	return fail;
-	//}
-
-	//±êÊ¶Ãû
-	//sprintf(pDeviceInfo->m_szIdname, "%s%s%d", deviceInfo.m_szIdentifier, deviceInfo.m_szModel, deviceInfo.m_nId);
-
 	//insert
 	g_deviceMap.insert(make_pair(pDeviceInfo->m_szSourceUrl, pDeviceInfo));
+	pthread_mutex_unlock(&dmt);
 	return success;
 }
 /*
@@ -149,6 +112,9 @@ int32_t CParseDevice::LoadDeviceXml(const char *pXmlFile)
 	Clear();
 
 	TiXmlHandle handle(&config);
+	TiXmlElement *ser_addr = handle.FirstChild("Server_Addr").ToElement();
+	int32_t nv = 0;
+	strncpy(server_addr, ser_addr->Attribute("ip",&nv), sizeof(server_addr));
 
 	TiXmlElement* pDevElement = handle.FirstChild("Devices").FirstChild("Device").ToElement();
 	while (NULL != pDevElement)
@@ -215,8 +181,8 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 		printf("ERROR:Empty xml message...\n");
 		return -1;
 	}
-	handle = new TiXmlDocument();
-	printer = new TiXmlPrinter();
+	TiXmlDocument *handle = new TiXmlDocument();
+	TiXmlPrinter *printer = new TiXmlPrinter();
 	handle->Parse(xml);
 	TiXmlNode* EnvelopeNode = handle->FirstChild("Envelope");
 	const char * EnvelopeType = EnvelopeNode->ToElement()->Attribute("type");
@@ -233,12 +199,14 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 				while(profileNode){
 					DeviceInfo devInfo;
 					memset(&devInfo, 0, sizeof(devInfo));
+					const char* szXmlValue = NULL;
 					TiXmlNode* profile = profileNode->FirstChildElement("deviceip");
 					if(profile != NULL){
 						szXmlValue = profile->ToElement()->GetText();
 						devInfo.m_nId = rtspcount++;
 						int a[4];
 						sscanf(szXmlValue, "%d.%d.%d.%d", &a[0], &a[1], &a[2], &a[3]);
+						char ipbuffer[32];
 						sprintf(ipbuffer, "%xx%xx%xx%x%c",a[0],     a[1], a[2], a[3], (char)(count +103 ));
 						strncpy(devInfo.m_szIdname, ipbuffer, strlen(ipbuffer));
 					}
@@ -261,13 +229,13 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 						DestElement->LinkEndChild(DestContent);
 						profileNode->ToElement()->LinkEndChild(DestElement);
 					}else{
+						char desturl[500];
 						memset(desturl,0,strlen(desturl));
-						strcat(desturl,"rtsp://");
-						//getsockname(sock_fd, (struct sockaddr *)&addr, &len);
-						//strcat(desturl,inet_ntoa(addr.sin_addr));
-						strcat(desturl,"192.168.101.151");
-						strcat(desturl,":8554/");
-						strcat(desturl, devInfo.m_szIdname);
+						sprintf(desturl, "rtsp://%s:8554/%s", server_addr, devInfo.m_szIdname);
+						//strcat(desturl,"rtsp://");
+						//strcat(desturl, server_addr);
+						//strcat(desturl,":8554/");
+						//strcat(desturl, devInfo.m_szIdname);
 						printf("INFO:Add new ProxySession:%s\nProxy this Session from %s\n",devInfo.m_szSourceUrl,desturl);
 						TiXmlText *DestContent = new TiXmlText(desturl);
 						TiXmlElement *DestElement = new TiXmlElement("desturi");
@@ -295,6 +263,7 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 
 DeviceInfo* CParseDevice::GetDeviceInfoByIdName(const char *pszIdName)
 {
+	pthread_mutex_lock(&dmt);
 	DeviceMap::iterator deviceIter = g_deviceMap.begin();
 	for (; deviceIter != g_deviceMap.end(); deviceIter++)
 	{
@@ -306,8 +275,10 @@ DeviceInfo* CParseDevice::GetDeviceInfoByIdName(const char *pszIdName)
 
 		if (0 == strcmp(pszIdName, pDeviceInfo->m_szIdname))
 		{
+			pthread_mutex_unlock(&dmt);
 			return pDeviceInfo;
 		}
 	}
+	pthread_mutex_unlock(&dmt);
 	return NULL;
 }

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="GB2312"?>
+<Server_Addr ip="192.168.20.253" />
 <Devices>
 	<Device id="0" name="0" url="rtsp://admin:123456@192.168.1.1:554/mpeg4"/>
 	<Device id="1" name="1" url="rtsp://admin:123456@192.168.1.2:554/mpeg4"/>

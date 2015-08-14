@@ -89,8 +89,8 @@ int DecodeXml(char * buffer){
 				strcpy(ss->rtspurl , ProfileNode->FirstChildElement("rtspuri")->GetText());
 				ss->height = (int )atof(ProfileNode->FirstChildElement("height")->GetText());
 				ss->width = (int )atof(ProfileNode->FirstChildElement("width")->GetText());
-				fileOutputIntervalset = (int )atof(ProfileNode->FirstChildElement("split")->GetText());
-				filename_suffix = ProfileNode->FirstChildElement("format")->GetText();
+				//fileOutputIntervalset = (int )atof(ProfileNode->FirstChildElement("split")->GetText());
+				//filename_suffix = ProfileNode->FirstChildElement("format")->GetText();
 				ourRTSPClient* rtspClient = lookupClientByRTSPURL(ss->rtspurl);
 				if (rtspClient == NULL){
 					ourRTSPClient* rtspClient = ourRTSPClient::createNew(ss, RTSP_CLIENT_VERBOSITY_LEVEL, progName);

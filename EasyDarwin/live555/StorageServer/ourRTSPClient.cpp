@@ -26,7 +26,7 @@
 #include "tinystr.h"
 using namespace std;
 
-#define MYSQL_SERVER_IP "192.168.101.149"
+#define MYSQL_SERVER_IP "192.168.1.252"
 #define MYSQL_USERNAME "root"
 #define MYSQL_PASSWORD "lunax"
 #define MYSQL_DATABSE "lunaxweb"

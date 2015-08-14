@@ -453,7 +453,7 @@ int DecodeXml(char * buffer){
                     printf("INFO:\"%s\" exsit, stopping it first...\n", vs->rtspurl);
                     VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(vs->rtspurl);
                     lwt->stop();
-                    printf("==========\n");
+                    //printf("==========\n");
                     videoSession->Remove(vs->rtspurl);
                     delete lwt; 
                     cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;

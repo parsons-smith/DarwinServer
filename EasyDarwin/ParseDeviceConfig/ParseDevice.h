@@ -37,4 +37,5 @@ private:
 	int32_t AddDevice(DeviceInfo& deviceInfo);
 	//int32_t DelDevice(uint32_t nId);
 	void Clear();
+	char server_addr[32];
 };
