@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="GB2312"?>
+<CMS_SERVER IP="127.0.0.1" PORT="8000" />
+<MYSQL_SERVER IP="192.168.1.252" PORT="3306" DATABASE="lunaxweb" USERNAME="root" PASSWORD="lunax" />
+<ROOTDIR dir="/video/" />
+<MAXDATASIZE size="4096" />
+<REQUEST_STREAMING_OVER_TCP value="False" /> 
