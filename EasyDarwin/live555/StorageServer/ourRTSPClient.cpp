@@ -26,20 +26,35 @@
 #include "tinystr.h"
 using namespace std;
 
+/*
 #define MYSQL_SERVER_IP "192.168.1.252"
 #define MYSQL_USERNAME "root"
 #define MYSQL_PASSWORD "lunax"
 #define MYSQL_DATABSE "lunaxweb"
 #define CMS_SERVER_IP "127.0.0.1"
 #define CMS_SERVER_PORT 8000
-#define MODE (S_IRWXU | S_IRWXG | S_IRWXO)  
+
 #define ROOTDIR  "/video/"
 #define MAXDATASIZE 4096
-#define RTSP_CLIENT_VERBOSITY_LEVEL 1 
 #define REQUEST_STREAMING_OVER_TCP False 
-const char * registermsg = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"sregister\"></Envelope>";
+*/
+
+
+#define MODE (S_IRWXU | S_IRWXG | S_IRWXO) 
+char MYSQL_SERVER_IP[16];
+int  MYSQL_SERVER_PORT = 3306;
+char MYSQL_USERNAME[50];
+char MYSQL_PASSWORD[50];
+char MYSQL_DATABASE[50];
+char CMS_SERVER_IP[16];
+int CMS_SERVER_PORT = 8000;
+char ROOTDIR[50];
+int MAXDATASIZE =4096;
+int RTSP_CLIENT_VERBOSITY_LEVEL = 1;
+bool REQUEST_STREAMING_OVER_TCP = False;
+
+
 int cms_fd = -1;
-char buf[MAXDATASIZE];
 
 int numbytes, sock_fd;
 struct sockaddr_in server_addr;
@@ -127,19 +142,19 @@ public:
 
 
 int MkDir(char *dir);
-//void *run_thread(void * orc);
+bool LoadConfig(char * xmlFile);
 ourRTSPClient * lookupClientByRTSPURL(const char * rtspurl);
 void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
 void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
 void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
-void subsessionAfterPlaying(void* clientData); // ����ý����ֹͣʱ����
-void subsessionByeHandler(void* clientData); // ����ý�������յ�RTCP��BYE��ʱ����
-void streamTimerHandler(void* clientData); // ������ý������ʱ�ĳ���ʱ�䣨δ���յ�BYE���
-void periodicFileOutputTimerHandler0(RTSPClient * rtspClient); //д�ļ��¼�
+void subsessionAfterPlaying(void* clientData); 
+void subsessionByeHandler(void* clientData); 
+void streamTimerHandler(void* clientData); 
+void periodicFileOutputTimerHandler0(RTSPClient * rtspClient);
 void sessionAfterPlaying0(void * rtspClient);
-void setupNextSubsession(RTSPClient* rtspClient); //�õ�����Ϊÿ����ý���Ự��������
-void shutdownStream(RTSPClient* rtspClient, int exitCode = 1); //�ر�һ����ý�����ӣ�����RTSPClient������
-ourRTSPClient * lookupClientByRTSPURL(const char * rtspurl); //����rtspurl�����Ѵ��ڵ�RTSPClient
+void setupNextSubsession(RTSPClient* rtspClient); 
+void shutdownStream(RTSPClient* rtspClient, int exitCode = 1);
+ourRTSPClient * lookupClientByRTSPURL(const char * rtspurl); 
 UsageEnvironment& operator<<(UsageEnvironment& env, const RTSPClient& rtspClient);
 UsageEnvironment& operator<<(UsageEnvironment& env, const MediaSubsession& subsession);
 
@@ -380,7 +395,7 @@ void ourRTSPClient::stopStorage(){
 	sprintf(sqlbuf, sql, ip, url, datebuf, timebuf, endtimebuf, path);
 	MYSQL sql_ins;  
 	mysql_init(&sql_ins);
-	if(!mysql_real_connect(&sql_ins,MYSQL_SERVER_IP,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABSE,0,NULL,0) ){
+	if(!mysql_real_connect(&sql_ins,MYSQL_SERVER_IP,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE,MYSQL_SERVER_PORT,NULL,0) ){
 		fprintf(stderr,"ERROR:Connect failed...\n");
 	}
 	int res=mysql_query(&sql_ins,sqlbuf);
@@ -660,16 +675,73 @@ void sessionAfterPlaying0(void *rtspClient) {
 		((ourRTSPClient*)rtspClient)->scale0, NULL);
 }
 
-int MkDir(char *dir)
-{
+int MkDir(char *dir){
 	DIR *mydir = NULL;
-	if ((mydir = opendir(dir)) == NULL)//�ж�Ŀ¼   
-	{
-		int ret = mkdir(dir, MODE);//����Ŀ¼  
-		if (ret != 0)
-		{
+	if ((mydir = opendir(dir)) == NULL){
+		int ret = mkdir(dir, MODE);
+		if (ret != 0){
 			return -1;
 		}
 	}
 	return 0;
+}
+
+bool LoadConfig(char * xmlFile){
+	//cout<<"INFO:Loading Config File..."<<endl;
+	if (NULL == xmlFile){
+		return false;
+	}
+	TiXmlDocument config(xmlFile);
+	if (!config.LoadFile(TIXML_ENCODING_UNKNOWN)){
+		return false;
+	}
+	TiXmlHandle handle(&config);
+	TiXmlElement *cms = handle.FirstChild("CMS_SERVER").ToElement();
+	int32_t nv = 0;
+	if(cms != NULL){
+		strncpy(CMS_SERVER_IP, cms->Attribute("IP",&nv), sizeof(CMS_SERVER_IP));
+		//cout<<"CMS_SERVER_IP:"<<CMS_SERVER_IP<<endl;
+		CMS_SERVER_PORT = atoi(cms->Attribute("PORT",&nv));
+		//cout<<"CMS_SERVER_PORT:"<<CMS_SERVER_PORT<<endl;
+		//strncpy(CMS_SERVER_PORT, cms->Attribute("PORT",&nv), sizeof(CMS_SERVER_PORT));
+	}
+
+	TiXmlElement *mysql = handle.FirstChild("MYSQL_SERVER").ToElement();
+	if(mysql != NULL){
+		strncpy(MYSQL_SERVER_IP, mysql->Attribute("IP",&nv), sizeof(MYSQL_SERVER_IP));
+		//cout<<"MYSQL_SERVER_IP:"<<MYSQL_SERVER_IP<<endl;
+		//strncpy(MYSQL_PORT, mysql->Attribute("PORT",&nv), sizeof(MYSQL_PORT));
+		MYSQL_SERVER_PORT = atoi(mysql->Attribute("PORT",&nv));
+		//cout<<"MYSQL_SERVER_PORT:"<<MYSQL_SERVER_PORT<<endl;
+		strncpy(MYSQL_DATABASE, mysql->Attribute("DATABASE",&nv), sizeof(MYSQL_DATABASE));
+		//cout<<"MYSQL_DATABASE:"<<MYSQL_DATABASE<<endl;
+		strncpy(MYSQL_USERNAME, mysql->Attribute("USERNAME",&nv), sizeof(MYSQL_USERNAME));
+		//cout<<"MYSQL_USERNAME:"<<MYSQL_USERNAME<<endl;
+		strncpy(MYSQL_PASSWORD, mysql->Attribute("PASSWORD",&nv), sizeof(MYSQL_PASSWORD));
+		//cout<<"MYSQL_PASSWORD:"<<MYSQL_PASSWORD<<endl;
+	}
+
+	TiXmlElement *dir = handle.FirstChild("ROOTDIR").ToElement();
+	if(dir != NULL){
+		strncpy(ROOTDIR, dir->Attribute("dir",&nv), sizeof(ROOTDIR));
+		//cout<<"ROOTDIR:"<<ROOTDIR<<endl;
+	}
+
+	TiXmlElement *size = handle.FirstChild("MAXDATASIZE").ToElement();
+	if(size != NULL){
+		MAXDATASIZE =  atoi(size->Attribute("size",&nv));
+		//cout<<"MAXDATASIZE:"<<MAXDATASIZE<<endl;
+	}
+	TiXmlElement *overtcp = handle.FirstChild("REQUEST_STREAMING_OVER_TCP").ToElement();
+	if(overtcp != NULL){
+		if(strcmp(overtcp->Attribute("value", &nv), "False") == 0){
+			REQUEST_STREAMING_OVER_TCP = False;
+		}
+		if(strcmp(overtcp->Attribute("value", &nv), "True") == 0){
+			REQUEST_STREAMING_OVER_TCP = True;
+		}
+		//cout<<"REQUEST_STREAMING_OVER_TCP:"<<REQUEST_STREAMING_OVER_TCP<<endl;
+	}
+	//cout<<"INFO:Loading Config File success..."<<endl;
+	return true;
 }

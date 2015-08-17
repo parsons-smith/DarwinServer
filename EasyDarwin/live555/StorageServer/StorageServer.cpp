@@ -6,8 +6,16 @@ int DecodeXml(char * buffer);
 void *send_thread(void * st);
 bool available(char * freesize);
 
-int main()
+int main(int argc, char *argv[])
 {
+	if(argc != 2)
+	{
+		cout << "usage: "<<argv[0] << " xmlfile" << endl;
+		return 1;
+	}
+	if(!LoadConfig(argv[1])){
+		cout<<"ERROR:LoadConfigFile failed"<<endl;
+	}
 	printf("INFO:StorageServer  started...\n");
 	if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("ERROR:Socket error\n");
@@ -21,19 +29,21 @@ int main()
 		perror("ERROR:Cannot connect to a CMSServer...\n");
 		exit(-1);
 	}
+	const char * registermsg = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><Envelope type=\"sregister\"></Envelope>";
 	if (send(sock_fd, registermsg, strlen(registermsg), 0) == -1) {
 		perror("ERROR:Send error\n");
 	}
+
 	pthread_t st;
 	int sthread = pthread_create(&st, NULL, send_thread, NULL);
 	if(sthread < 0){
 		printf("ERROR:send_thread create failed!\n");
 	}
 
-
 	fd_set fdsr;
 	int ret;
 	struct timeval tv;
+	char buf[MAXDATASIZE];
 
 	while (1){
 		tv.tv_sec = 30;
@@ -49,7 +59,6 @@ int main()
 			continue;
 		}
 		if (FD_ISSET(sock_fd, &fdsr)) {
-
 			ret = recv(sock_fd, buf, MAXDATASIZE, 0);
 			if (ret <= 0) {
 				printf("ERROR:Socket closed...\n");
@@ -171,7 +180,7 @@ void *send_thread(void * st){
 
 bool available(char * freesize){
 	struct statfs diskInfo;
-	statfs("/video/",&diskInfo);
+	statfs(ROOTDIR,&diskInfo);
 	unsigned long long totalBlocks = diskInfo.f_bsize;
 	unsigned long long freeDisk = diskInfo.f_bavail*totalBlocks;
 	sprintf(freesize,"%llu",freeDisk>>30);
