@@ -217,31 +217,30 @@ int CParseDevice::DecodeXml(const char *xml, int sock_fd)
 					profile = profileNode->FirstChildElement("sourceuri");
 					if(profile != NULL){
 						szXmlValue = profile->ToElement()->GetText();
-						strncpy(devInfo.m_szSourceUrl, szXmlValue, sizeof(devInfo.m_szSourceUrl));
+						if(szXmlValue != NULL)
+							strncpy(devInfo.m_szSourceUrl, szXmlValue, sizeof(devInfo.m_szSourceUrl));
 					}
 
 					//Add Device
-					if (success != AddDevice(devInfo))
-					{
-						printf("ERROR:Add new ProxySession:%s Falied!",devInfo.m_szSourceUrl);
-						TiXmlText *DestContent = new TiXmlText("None");
-						TiXmlElement *DestElement = new TiXmlElement("desturi");
-						DestElement->LinkEndChild(DestContent);
-						profileNode->ToElement()->LinkEndChild(DestElement);
-					}else{
-						char desturl[500];
-						memset(desturl,0,strlen(desturl));
-						sprintf(desturl, "rtsp://%s:8554/%s", server_addr, devInfo.m_szIdname);
-						//strcat(desturl,"rtsp://");
-						//strcat(desturl, server_addr);
-						//strcat(desturl,":8554/");
-						//strcat(desturl, devInfo.m_szIdname);
-						printf("INFO:Add new ProxySession:%s\nProxy this Session from %s\n",devInfo.m_szSourceUrl,desturl);
-						TiXmlText *DestContent = new TiXmlText(desturl);
-						TiXmlElement *DestElement = new TiXmlElement("desturi");
-						DestElement->LinkEndChild(DestContent);
-						profileNode->ToElement()->LinkEndChild(DestElement);
+					if(strcmp(devInfo.m_szSourceUrl,"") != 0){
+						if (success != AddDevice(devInfo)){
+							printf("ERROR:Add new ProxySession:%s Falied!",devInfo.m_szSourceUrl);
+							TiXmlText *DestContent = new TiXmlText("None");
+							TiXmlElement *DestElement = new TiXmlElement("desturi");
+							DestElement->LinkEndChild(DestContent);
+							profileNode->ToElement()->LinkEndChild(DestElement);
+						}else{
+							char desturl[500];
+							memset(desturl,0,strlen(desturl));
+							sprintf(desturl, "rtsp://%s:8554/%s", server_addr, devInfo.m_szIdname);
+							printf("INFO:Add new ProxySession:%s\nProxy this Session from %s\n",devInfo.m_szSourceUrl,desturl);
+							TiXmlText *DestContent = new TiXmlText(desturl);
+							TiXmlElement *DestElement = new TiXmlElement("desturi");
+							DestElement->LinkEndChild(DestContent);
+							profileNode->ToElement()->LinkEndChild(DestElement);
+						}
 					}
+
 					profileNode = profileNode->NextSiblingElement("profile");
 					count++;
 				}   
