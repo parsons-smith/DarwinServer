@@ -80,6 +80,13 @@ int main( int argc, char * argv[ ] )
                             <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1x1fg</rtspuri> \
                         </profile> \
                     </Envelope>";
+    char * buffer41 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \
+                    <Envelope type=\"available\"> \
+                        <profile> \
+                            <mac>4f:8f:xx:xx:xx:xx</mac> \
+                             <cfd>6</cfd> \
+                        </profile> \
+                    </Envelope>";
 
     char * buffer5 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \
                     <Envelope type=\"startdeal\"> \
@@ -129,7 +136,7 @@ int main( int argc, char * argv[ ] )
     int x;
     int flag = 1;
     while(flag){
-        printf("1---registercontrol\n2---getrtspuri\n3---startstorage\n4---stopstorage\n5---startdeal\n6---stopdeal\n0---quit\nplease choose:\n");
+        printf("1---registercontrol\n2---getrtspuri\n3---startstorage\n4---stopstorage\n5---startdeal\n6---stopdeal\n7---available\n0---quit\nplease choose:\n");
         scanf("%d",&x);
         switch(x){
             case 1:
@@ -168,7 +175,7 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send startstorage!");
+                printf("send startstorage!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 
@@ -184,7 +191,7 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send stopstorage!");
+                printf("send stopstorage!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 
@@ -200,7 +207,7 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send startdeal!");
+                printf("send startdeal!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 
@@ -216,7 +223,23 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send stopdeal!");
+                printf("send stopdeal!\n");
+                if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
+                    perror( "recv error" ); 
+                    return 1; 
+                } 
+                if ( numbytes) { 
+                    buf[numbytes] = '\0'; 
+                    printf("received: %s\n",buf); 
+                } 
+                getchar();
+                break;
+            case 7:
+                if ( send ( sockfd, buffer41 , strlen(buffer6), 0) == -1) { 
+                    perror ( "send error" ); 
+                    return 1; 
+                }
+                printf("send available!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 
@@ -232,7 +255,7 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send startstorage!");
+                printf("send startstorage!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 
@@ -248,7 +271,7 @@ int main( int argc, char * argv[ ] )
                     perror ( "send error" ); 
                     return 1; 
                 }
-                printf("send stopstorage!");
+                printf("send stopstorage!\n");
                 if ( ( numbytes = recv ( sockfd, buf, MAXDATASIZE, 0) ) == -1) { 
                     perror( "recv error" ); 
                     return 1; 

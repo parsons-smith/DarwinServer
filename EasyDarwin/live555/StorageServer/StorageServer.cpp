@@ -1,8 +1,10 @@
 #include "ourRTSPClient.cpp"
+#include <sys/statfs.h>
 using namespace std;
 
 int DecodeXml(char * buffer);
 void *send_thread(void * st);
+bool available(char * freesize);
 
 int main()
 {
@@ -128,6 +130,21 @@ int DecodeXml(char * buffer){
 				strcpy(replybuffer, const_cast<char *>(printer->CStr()));
 				smsgq.push(replybuffer);
 			}
+			if(!strcmp(EnvelopeType, "available")){
+				EnvelopeNode->ToElement()->SetAttribute("type", "r_available");
+				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
+				TiXmlElement *action = new TiXmlElement("avail");  
+				ProfileNode->LinkEndChild(action);
+				char freesize[30];
+				available(freesize);
+				TiXmlText *actionvalue = new TiXmlText(freesize);  
+				action->LinkEndChild(actionvalue); 
+				handle->Accept( printer ); 
+				char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
+				memset(replybuffer,0,sizeof(char) * MAXDATASIZE);
+				strcpy(replybuffer, const_cast<char *>(printer->CStr()));
+				smsgq.push(replybuffer);
+			}
 		}
 	}
 	delete handle;
@@ -138,15 +155,25 @@ int DecodeXml(char * buffer){
 
 
 void *send_thread(void * st){
-    while(true){
-        sleep(1);
-                while(!smsgq.empty()){
-                    usleep(10);
-                    char *msg = smsgq.pop();
-                    if(send(sock_fd, msg, strlen(msg), 0) == -1){
-                        perror("ERROR:Send error\n");
-                    }
-                    delete [] msg;
-                }
-            }
+	while(true){
+		sleep(1);
+		while(!smsgq.empty()){
+			usleep(10);
+			char *msg = smsgq.pop();
+			if(send(sock_fd, msg, strlen(msg), 0) == -1){
+				perror("ERROR:Send error\n");
+			}
+			delete [] msg;
+		}
+	}
+	return (void *)NULL;
+}
+
+bool available(char * freesize){
+	struct statfs diskInfo;
+	statfs("/video/",&diskInfo);
+	unsigned long long totalBlocks = diskInfo.f_bsize;
+	unsigned long long freeDisk = diskInfo.f_bavail*totalBlocks;
+	sprintf(freesize,"%llu",freeDisk>>30);
+	return true;
 }
