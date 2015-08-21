@@ -215,38 +215,36 @@ void  VideoUnderstanding::update_mhi( IplImage* img, IplImage* dst, int diff_thr
 			num[x]++;
 		}
 
-	int flag = 0;
+
 	int tmp = img->height * img->width / 2;
-	for (int i = 0; i < 16; i++){
-		if (num[i] >= tmp){
-			flag = 1;
-			break;
+	if(vs->warning_type[0] == '1'){
+		for(;cont;cont = cont->h_next){
+			Rect r = ((CvContour*)cont)->rect;
+			// 直接使用CONTOUR中的矩形来画轮廓
+			//面积小于RECT_MAX_AERA的rect将忽略
+			if (r.height * r.width > RECT_MAX_AERA){
+				cvRectangle( img, cvPoint(r.x,r.y), cvPoint(r.x + r.width, r.y + r.height),CV_RGB(255,0,0), 1, CV_AA,0);
+				if(IsLineIntersectRect(Point(vs->startx, vs->starty) , Point(vs->endx, vs->endy),r)){
+					gettimeofday(&end,NULL);
+					if(end.tv_sec - start.tv_sec >= interval){
+						sendwarningmessage("cross");
+						cout << "WARNING: "<<time(NULL) << vs->rtspurl<<"cross!"<<endl;
+						gettimeofday(&start,NULL);
+					}
+				}
+			  }
 		}
 	}
-	for(;cont;cont = cont->h_next){
-		Rect r = ((CvContour*)cont)->rect;
-		// 直接使用CONTOUR中的矩形来画轮廓
-		//面积小于RECT_MAX_AERA的rect将忽略
-		if (r.height * r.width > RECT_MAX_AERA){
-			cvRectangle( img, cvPoint(r.x,r.y), cvPoint(r.x + r.width, r.y + r.height),CV_RGB(255,0,0), 1, CV_AA,0);
-			if(IsLineIntersectRect(Point(vs->startx, vs->starty) , Point(vs->endx, vs->endy),r))//如果有面积大的rect和线相交则输出警报
-				gettimeofday(&end,NULL);
-				//printf("end-sec:%d\n",end.tv_sec);
-				//printf("%d",end.tv_sec - start.tv_sec);
-				if(end.tv_sec - start.tv_sec >= interval){
-					if (flag == 1 && !strcmp(vs->warning_type, "shelter")){
-						cout << "WARNING: "<< time(NULL) <<vs->rtspurl<<" Somebody shelter from the screen!"<<endl;
-						sendwarningmessage("shelter");
-					}
-					if(!strcmp(vs->warning_type, "cross")){
-						sendwarningmessage("cross");
-						cout << "WARNING: "<<time(NULL) << vs->rtspurl<<" Somebody cross the line!"<<endl;
-					}
-					gettimeofday(&start,NULL);
-					//printf("start-sec:%d\n",start.tv_sec);
-				}
-		  }
+	if(vs->warning_type[1] == '1'){
+		for (int i = 0; i < 16; i++){
+			if (num[i] >= tmp){
+				cout << "WARNING: "<< time(NULL) <<vs->rtspurl<<" shelter!"<<endl;
+				sendwarningmessage("shelter");
+				break;
+			}
+		}
 	}
+
 	cvReleaseMemStorage(&stor);
 	cvReleaseImage( &pyr );
 }
@@ -278,7 +276,6 @@ int VideoUnderstanding::sendwarningmessage(const char * type){
 	const char * msgstl = "<?xml version=\"1.0\"?><Envelope type=\"warning\"><profile><mac>%s</mac><cfd>%s</cfd><rtspuri>%s</rtspuri><time>%ld</time><type>%s</type></profile></Envelope>";
 	char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
 	memset(replybuffer,0, strlen(replybuffer));
-	//char replybuffer[MAXDATASIZE] ={0};
 	int offset = sprintf(replybuffer, msgstl, vs->mac, vs->cfd, vs->rtspurl,time(NULL), type);
 	replybuffer[offset] = '\0';
 	wmsgq.push(replybuffer);
@@ -289,16 +286,15 @@ int VideoUnderstanding::sendstartreply(const char * msg){
 	const char * msgstl = "<?xml version=\"1.0\"?><Envelope type=\"r_startdeal\"><profile><mac>%s</mac><cfd>%s</cfd><rtspuri>%s</rtspuri><action>%s</action></profile></Envelope>";
 	char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
 	memset(replybuffer,0, strlen(replybuffer));
-	//char replybuffer[MAXDATASIZE]={0};
 	sprintf(replybuffer, msgstl, vs->mac, vs->cfd, vs->rtspurl, msg);
-	cout<<"INFO: Action "<<msg<<endl;
+	//cout<<"INFO: Action "<<msg<<endl;
 	wmsgq.push(replybuffer);
 	return 0;
 }
 
 void *send_thread(void * st){
 	while(true){
-		sleep(1);
+		usleep(10);
 		while(!wmsgq.empty()){
 			usleep(10);
 			char *msg = wmsgq.pop();
@@ -427,17 +423,21 @@ int DecodeXml(char * buffer){
 			cout << "WARNING:got a unregistered message..." <<endl;
 		}else{
 			if(!strcmp(EnvelopeType, "startdeal")){
-				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
+				//const char * Category = EnvelopeNode->ToElement()->Attribute("category");
 				struct vsession * vs = new vsession;
 				memset(vs,0,sizeof(struct vsession));
-				strcpy(vs->warning_type,ProfileNode->FirstChildElement("category")->GetText());
-				strcpy(vs->rtspurl , ProfileNode->FirstChildElement("rtspuri")->GetText());
-				strcpy(vs->mac , ProfileNode->FirstChildElement("mac")->GetText());
-				strcpy(vs->cfd , ProfileNode->FirstChildElement("cfd")->GetText());
-				vs->startx = (int )atof(ProfileNode->FirstChildElement("startcol")->GetText());
-				vs->starty = (int )atof(ProfileNode->FirstChildElement("startrow")->GetText());
-				vs->endx = (int )atof(ProfileNode->FirstChildElement("endcol")->GetText());
-				vs->endy = (int )atof(ProfileNode->FirstChildElement("endrow")->GetText());
+				strcpy(vs->warning_type,EnvelopeNode->ToElement()->Attribute("category"));
+				strcpy(vs->mac , EnvelopeNode->FirstChildElement("mac")->GetText());
+				strcpy(vs->cfd , EnvelopeNode->FirstChildElement("cfd")->GetText());
+				TiXmlNode* AlarmNode = EnvelopeNode->FirstChild("alarmline");
+				if( AlarmNode != NULL){
+					strcpy(vs->rtspurl , AlarmNode->FirstChildElement("rtspuri")->GetText());
+					vs->startx = (int )atof(AlarmNode->FirstChildElement("startcol")->GetText());
+					vs->starty = (int )atof(AlarmNode->FirstChildElement("startrow")->GetText());
+					vs->endx = (int )atof(AlarmNode->FirstChildElement("endcol")->GetText());
+					vs->endy = (int )atof(AlarmNode->FirstChildElement("endrow")->GetText());
+				}
+				printf("%s\n",vs->warning_type);
 				if(!videoSession->Lookup(vs->rtspurl)){
 					cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;
 					VideoUnderstanding *lw = new  VideoUnderstanding(vs);
@@ -446,7 +446,6 @@ int DecodeXml(char * buffer){
 					printf("INFO:\"%s\" exsit, stopping it first...\n", vs->rtspurl);
 					VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(vs->rtspurl);
 					lwt->stop();
-					//printf("==========\n");
 					videoSession->Remove(vs->rtspurl);
 					delete lwt; 
 					cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;
@@ -454,7 +453,7 @@ int DecodeXml(char * buffer){
 					lw->run();
 				}
 			}
-
+			/*
 			if(!strcmp(EnvelopeType, "stopdeal")){
 				EnvelopeNode->ToElement()->SetAttribute("type", "r_stopdeal");
 				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
@@ -485,6 +484,7 @@ int DecodeXml(char * buffer){
 				strcpy(replybuffer, const_cast<char *>(printer->CStr()));
 				wmsgq.push(replybuffer);
 			}
+			*/
 		}
 	}
 	delete handle;

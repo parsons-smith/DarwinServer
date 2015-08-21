@@ -99,46 +99,32 @@ ONVIF中心管理服务器和CMS交互
 
 4.图像处理
 	ONVIF发送：
-		<Envelope type="startdeal">
-			<profile>
-				<mac>4f:8f:xx:xx:xx:xx</mac>
-				<cfd>6</cfd>
+		<Envelope type="startdeal" category="1100000000000000">
+			<mac>4f:8f:xx:xx:xx:xx</mac>
+			<cfd>6</cfd>
+			<alarmline>
 				<rtspuri>rtsp://122.205.129.254:554/1/h264major</rtspuri>
 				<startcol>0</startcol>
 				<startrow>500</startrow>
 				<endcol>800</endcol>
 				<endrow>0</endrow>
-			</profile>
+			</alarmline>
+			<xxx>
+				<yyy>.....</yyy>
+				.....
+			</xxx>
 		</Envelope>
+
+		category="1100000000000000"
+		cross
+		shelter
 	CMS响应：
 		<Envelope type="r_startdeal">
-			<profile>
-				<mac>4f:8f:xx:xx:xx:xx</mac>
-				<cfd>6</cfd>
-				<rtspuri>rtsp://122.205.129.254:554/1/h264major</rtspuri>
-				<action>[success|exception|exisit|fail]</action>
-			</profile>
+			<mac>4f:8f:xx:xx:xx:xx</mac>
+			<cfd>6</cfd>
+			<rtspuri>rtsp://122.205.129.254:554/1/h264major</rtspuri>
+			<action>[success|exception|exisit|fail]</action>
 		</Envelope>
-
-
-	ONVIF发送：
-		<Envelope type="stopdeal">
-			<profile>
-				<mac>4f:8f:xx:xx:xx:xx</mac>
-				<cfd>6</cfd>
-				<rtspuri>rtsp://122.205.129.254:554/1/h264major</rtspuri>
-			</profile>
-		</Envelope>
-	CMS响应：
-		<Envelope type="r_stopdeal">
-			<profile>
-				<mac>4f:8f:xx:xx:xx:xx</mac>
-				<cfd>6</cfd>
-				<rtspuri>rtsp://122.205.129.254:554/1/h264major</rtspuri>
-				<action>[success|notexist|fail]</action>
-			</profile>
-		</Envelope>
-
 
 
 5.报警信息
