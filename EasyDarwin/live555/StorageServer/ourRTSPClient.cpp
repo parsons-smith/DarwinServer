@@ -210,7 +210,6 @@ void ourRTSPClient::createPeriodicOutputFiles0() {
 
 void ourRTSPClient::createOutputFiles0(char const * periodicFileNameSuffix) {
 	char outFileName[1000];
-	//char const* prefix = this->name();
 	snprintf(outFileName, sizeof outFileName, "%s%s.%s", filename_prefix, periodicFileNameSuffix, outPutAviFile ? "avi" : "mp4");
 
 	if (strcmp(filename_suffix, "mp4") == 0){
@@ -367,23 +366,25 @@ void ourRTSPClient::closeMediaSinks0() {
 void ourRTSPClient::startStorage(){
 	sendstartreply("success");
 	envir().taskScheduler().doEventLoop(&eventLoopWatchVariable);
+	// when exception happens......
+	sendstartreply("exception");
+	this->closeMediaSinks0();
+	shutdownStream(this, 1);
+	fRtspClient->Remove(ss->rtspurl);
 }
 
 void ourRTSPClient::stopStorage(){
 	this->closeMediaSinks0();
 	shutdownStream(this, 1);
-	char path[200], sqlbuf[500], ip[20], vn[200], url[200];
+	char path[200], sqlbuf[500];
 	time(&lt);
 	strftime(end_t, 128, "%X",localtime(&lt));
-	strcpy(ip, this->ss->deviceip);
-	strcpy(vn, this->videoname);
-	strcpy(url, this->ss->rtspurl);
 	struct sockaddr_in ourAddress;
 	ourAddress.sin_addr.s_addr = ourIPAddress(envir());
 	memset(path, 0, strlen(path));
-	sprintf(path, "http://%s:80/%s/%s/%s", AddressString(ourAddress).val(), ip, date_t, vn);
+	sprintf(path, "http://%s:80/%s/%s/%s", AddressString(ourAddress).val(), ss->deviceip, date_t, videoname);
 	const char *sql = "insert into videoindex (deviceip,rtspuri,sdate,starttime,endtime,desturi)values('%s','%s','%s','%d:%d:%d','%s','%s');";
-	sprintf(sqlbuf, sql, ip, url, date_t, start_t[0],start_t[1],start_t[2], end_t, path);
+	sprintf(sqlbuf, sql, ss->deviceip, ss->rtspurl, date_t, start_t[0],start_t[1],start_t[2], end_t, path);
 	MYSQL sql_ins;  
 	mysql_init(&sql_ins);
 	if(!mysql_real_connect(&sql_ins,MYSQL_SERVER_IP,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE,MYSQL_SERVER_PORT,NULL,0) ){
@@ -396,7 +397,8 @@ void ourRTSPClient::stopStorage(){
 		printf("INFO:Insert record to mysql success...\n");
 	}
 	mysql_close(&sql_ins);
-	fRtspClient->Remove(url);
+	printf("%s",ss->rtspurl);
+	fRtspClient->Remove(ss->rtspurl);
 }
 
 int ourRTSPClient::run(){
@@ -412,8 +414,7 @@ int ourRTSPClient::run(){
 int ourRTSPClient::stop(){
 	try{
 		this->stopStorage();
-	}
-	catch (exception &e){
+	}catch (exception &e){
 		return -1;
 	}
 	return 0;
