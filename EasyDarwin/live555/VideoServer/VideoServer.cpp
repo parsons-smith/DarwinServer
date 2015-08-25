@@ -31,7 +31,7 @@ const double MIN_TIME_DELTA = 0.05;
 const int N = 3;
 const double BINARYTHRES=30;
 const int RECT_MAX_AERA = 100;//面积小于RECT_MAX_AERA的rect将忽略
-const int interval = 1;
+const int interval = 5;
 int cms_fd = -1;
 HashTable * videoSession = HashTable::create(0); //用来存储VIDEOSESSION的Hash表
 MutexQueue<char *> wmsgq;
@@ -228,7 +228,7 @@ void  VideoUnderstanding::update_mhi( IplImage* img, IplImage* dst, int diff_thr
 					gettimeofday(&end,NULL);
 					if(end.tv_sec - start.tv_sec >= interval){
 						sendwarningmessage("cross");
-						cout << "WARNING: "<<time(NULL) << vs->rtspurl<<"cross!"<<endl;
+						cout << "WARNING: "<<time(NULL) << " "<<vs->rtspurl<<" cross!"<<endl;
 						gettimeofday(&start,NULL);
 					}
 				}
@@ -238,7 +238,7 @@ void  VideoUnderstanding::update_mhi( IplImage* img, IplImage* dst, int diff_thr
 	if(vs->warning_type[1] == '1'){
 		for (int i = 0; i < 16; i++){
 			if (num[i] >= tmp){
-				cout << "WARNING: "<< time(NULL) <<vs->rtspurl<<" shelter!"<<endl;
+				cout << "WARNING: "<< time(NULL) <<" "<<vs->rtspurl<<" shelter!"<<endl;
 				sendwarningmessage("shelter");
 				break;
 			}
@@ -410,7 +410,6 @@ int main(){
 
 int DecodeXml(char * buffer){
 	TiXmlDocument *handle = new TiXmlDocument();
-	TiXmlPrinter *printer = new TiXmlPrinter();
 	handle->Parse(buffer);
 	TiXmlNode* EnvelopeNode = handle->FirstChild("Envelope");
 	const char * EnvelopeType = EnvelopeNode->ToElement()->Attribute("type");
@@ -429,65 +428,49 @@ int DecodeXml(char * buffer){
 				strcpy(vs->warning_type,EnvelopeNode->ToElement()->Attribute("category"));
 				strcpy(vs->mac , EnvelopeNode->FirstChildElement("mac")->GetText());
 				strcpy(vs->cfd , EnvelopeNode->FirstChildElement("cfd")->GetText());
+				strcpy(vs->rtspurl , EnvelopeNode->FirstChildElement("rtspuri")->GetText());
 				TiXmlNode* AlarmNode = EnvelopeNode->FirstChild("alarmline");
 				if( AlarmNode != NULL){
-					strcpy(vs->rtspurl , AlarmNode->FirstChildElement("rtspuri")->GetText());
 					vs->startx = (int )atof(AlarmNode->FirstChildElement("startcol")->GetText());
 					vs->starty = (int )atof(AlarmNode->FirstChildElement("startrow")->GetText());
 					vs->endx = (int )atof(AlarmNode->FirstChildElement("endcol")->GetText());
 					vs->endy = (int )atof(AlarmNode->FirstChildElement("endrow")->GetText());
 				}
 				printf("%s\n",vs->warning_type);
-				if(!videoSession->Lookup(vs->rtspurl)){
-					cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;
-					VideoUnderstanding *lw = new  VideoUnderstanding(vs);
-					lw->run();
-				}else{
-					printf("INFO:\"%s\" exsit, stopping it first...\n", vs->rtspurl);
-					VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(vs->rtspurl);
-					lwt->stop();
-					videoSession->Remove(vs->rtspurl);
-					delete lwt; 
-					cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;
-					VideoUnderstanding *lw = new  VideoUnderstanding(vs);
-					lw->run();
-				}
-			}
-			/*
-			if(!strcmp(EnvelopeType, "stopdeal")){
-				EnvelopeNode->ToElement()->SetAttribute("type", "r_stopdeal");
-				TiXmlNode* ProfileNode = EnvelopeNode->FirstChild("profile");
-				const char * rtsp = ProfileNode->FirstChildElement("rtspuri")->GetText();
-				TiXmlElement *action = new TiXmlElement("action");  
-				ProfileNode->LinkEndChild(action);  
-				if(videoSession->Lookup(rtsp)){
-					cout <<"INFO:Stop deal the \'"<<rtsp<<"\""<<endl;
-					VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(rtsp);
-					if(lwt != NULL){
+				if(strcmp(vs->warning_type,"0000000000000000") !=0 ){
+					if(!videoSession->Lookup(vs->rtspurl)){
+						cout <<"INFO:Start deal \""<<vs->rtspurl <<"\""<<endl;
+						VideoUnderstanding *lw = new  VideoUnderstanding(vs);
+						lw->run();
+					}else{
+						VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(vs->rtspurl);
 						lwt->stop();
-						videoSession->Remove(rtsp);
+						videoSession->Remove(vs->rtspurl);
+						delete lwt; 
+						cout <<"INFO:ReStart deal \""<<vs->rtspurl <<"\""<<endl;
+						VideoUnderstanding *lw = new  VideoUnderstanding(vs);
+						lw->run();
 					}
-					delete lwt;
-					lwt = NULL;
-					TiXmlText *actionvalue = new TiXmlText("success");  
-					action->LinkEndChild(actionvalue); 
-					printf("INFO:Action success\n");
+
 				}else{
-					cout <<"INFO:"<<rtsp<<"\""<<"didn't exsit"<<endl;
-					TiXmlText *actionvalue = new TiXmlText("fail");  
-					action->LinkEndChild(actionvalue); 
-					printf("INFO:Action fail\n");
+					if(videoSession->Lookup(vs->rtspurl)){
+						cout <<"INFO:Stop deal \""<<vs->rtspurl <<"\""<<endl;
+						VideoUnderstanding *lwt = (VideoUnderstanding *)videoSession->Lookup(vs->rtspurl);
+						lwt->stop();
+						videoSession->Remove(vs->rtspurl);
+						lwt->sendstartreply("success");
+						delete lwt; 
+					}else{
+						cout<<"INFO: \""<<vs->rtspurl<<"\" didn't exsit"<<endl;
+						VideoUnderstanding *lw = new  VideoUnderstanding(vs);
+						lw->sendstartreply("fail");
+						delete lw;
+					}
 				}
-				handle->Accept( printer ); 
-				char * replybuffer = (char *)malloc(sizeof(char) * MAXDATASIZE);
-				memset(replybuffer,0,sizeof(char) * MAXDATASIZE);
-				strcpy(replybuffer, const_cast<char *>(printer->CStr()));
-				wmsgq.push(replybuffer);
+
 			}
-			*/
 		}
 	}
 	delete handle;
-	delete printer;
 	return 0;
 }

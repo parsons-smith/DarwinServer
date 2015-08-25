@@ -63,8 +63,8 @@ int main( int argc, char * argv[ ] )
                         <profile> \
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
-                            <deviceip>192.168.1.11</deviceip> \
-                            <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1x1fg</rtspuri> \
+                            <deviceip>192.168.1.31</deviceip> \
+                            <rtspuri>rtsp://192.168.20.253:8554/c0xa8x1x1fg </rtspuri> \
                             <height>720</height> \
                             <width>1280</width> \
                             <split>30</split> \
@@ -77,7 +77,7 @@ int main( int argc, char * argv[ ] )
                         <profile> \
                             <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
-                            <rtspuri>rtsp://192.168.101.151:8554/c0xa8x1x1fg</rtspuri> \
+                            <rtspuri>rtsp://192.168.20.253:8554/c0xa8x1x1fg </rtspuri> \
                         </profile> \
                     </Envelope>";
     char * buffer41 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \
@@ -112,25 +112,25 @@ int main( int argc, char * argv[ ] )
                     </Envelope>";
 
     char * buffera = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \
-                    <Envelope type=\"startdeal\"> \
+                    <Envelope type=\"startstorage\"> \
                         <profile> \
-                            <category>cross</category> \
                              <mac>4f:8f:xx:xx:xx:xx</mac> \
                              <cfd>6</cfd> \
-                             <rtspuri>rtsp://admin:123456@192.168.1.7:554/mpeg4</rtspuri> \
-                           <startcol>0</startcol> \
-                           <startrow>1000</startrow> \
-                           <endcol>1000</endcol> \
-                           <endrow>0</endrow> \
+                            <deviceip>192.168.1.8</deviceip> \
+                            <rtspuri>rtsp://192.168.20.253:8554/c0xa8x1x8g</rtspuri> \
+                            <height>720</height> \
+                            <width>1280</width> \
+                            <split>30</split> \
+                            <format>mp4</format> \
                         </profile> \
                     </Envelope>";
                     
     char * bufferb = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> \
-                    <Envelope type=\"stopdeal\"> \
+                    <Envelope type=\"stopstorage\"> \
                         <profile> \
-                             <mac>4f:8f:xx:xx:xx:xx</mac> \
-                            <cfd>6</cfd> \
-                            <rtspuri>rtsp://admin:123456@192.168.1.7:554/mpeg4</rtspuri> \
+                            <mac>4f:8f:xx:xx:xx:xx</mac> \
+                             <cfd>6</cfd> \
+                            <rtspuri>rtsp://192.168.20.253:8554/c0xa8x1x8g</rtspuri> \
                         </profile> \
                     </Envelope>";
     int x;

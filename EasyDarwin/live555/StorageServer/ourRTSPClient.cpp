@@ -124,6 +124,7 @@ protected:
 	static void *run_thread(void * orc);
 public:
 	time_t lt;
+	struct tm * starttime;
 	pthread_t rpt;
 	StreamClientState scs;
 	struct ssession *ss;
@@ -135,7 +136,10 @@ public:
 	double initialSeekTime0;
 	float scale0;
 	double endTime0;
-	struct tm *starttime;
+	char date_t[20];
+	//char start_t[20];
+	int start_t[3];
+	char end_t[20];
 	char videoname[200];
 	unsigned rtspClientCount ; 
 };
@@ -163,6 +167,11 @@ ourRTSPClient::ourRTSPClient(UsageEnvironment& env, struct ssession * ts, int ve
 RTSPClient(env, ts->rtspurl, verbosityLevel, applicationName, tunnelOverHTTPPortNum, -1) {
 	time(&lt);
 	starttime = localtime(&lt);
+	start_t[0] = starttime->tm_hour;
+	start_t[1] = starttime->tm_min;
+	start_t[2] = starttime->tm_sec;
+	strftime(date_t, 20, "%F",localtime(&lt));
+	snprintf(this->videoname, sizeof this->videoname, "%d-%d-%d.%s", start_t[0], start_t[1], start_t[2], outPutAviFile ? "avi" : "mp4");
 	ss = ts;
 	fileOutputInterval = fileOutputIntervalset; // ��
 	fileOutputSecondsSoFar = 0; // ��
@@ -182,7 +191,6 @@ ourRTSPClient::~ourRTSPClient() {
 }
 
 ourRTSPClient* ourRTSPClient::createNew( struct ssession * ts, int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
-	//printf("deviceip: %s\n", dip);
 	TaskScheduler *scheduler = BasicTaskScheduler::createNew();
 	BasicUsageEnvironment *env = BasicUsageEnvironment::createNew(*scheduler);
 	return  new ourRTSPClient(*env, ts, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
@@ -236,12 +244,6 @@ int ourRTSPClient::createVideoFile(){
 		fprintf(stderr, "ERROR:Change working dir failed\n");
 		return -1;
 	}
-	struct tm *newtime;
-	char tmpbuf[128];
-	time_t lt1;
-	time(&lt1);
-	newtime = localtime(&lt1);
-	strftime(tmpbuf, 128, "%F", newtime);
 	if (MkDir(this->ss->deviceip) == -1){
 		fprintf(stderr, "ERROR:Create dir failed\n");
 		return -1;
@@ -250,20 +252,17 @@ int ourRTSPClient::createVideoFile(){
 		fprintf(stderr, "ERROR:Change working dir failed\n");
 		return -1;
 	}
-	if (MkDir(tmpbuf) == -1){
+	if (MkDir(date_t) == -1){
 		fprintf(stderr, "ERROR:Create dir failed\n");
 		return -1;
 	}
-	if (chdir(tmpbuf) == -1){
+	if (chdir(date_t) == -1){
 		fprintf(stderr, "ERROR:Change working dir failed\n");
 		return -1;
 	}
-	snprintf(tmpbuf, 128, "%d-%d-%d-%d-%d-%d", (1900 + newtime->tm_year), (1 + newtime->tm_mon), newtime->tm_mday, newtime->tm_hour, newtime->tm_min, newtime->tm_sec);
-	snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, outPutAviFile ? "avi" : "mp4");
-	printf("videoname: %s\n", this->videoname);
 
 	if (strcmp(filename_suffix, "mp4") == 0){
-		snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "mp4");
+		//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "mp4");
 		Out0 = QuickTimeFileSink::createNew(envir(), *scs.session, this->videoname, fileSinkBufferSize0, ss->width, ss->height, 25, false, false, false, true);
 		if (Out0 == NULL) {
 			envir() << "Failed to create a \"QuickTimeFileSink\" for outputting to \"" << this->videoname << "\": " << envir().getResultMsg() << "\n";
@@ -275,7 +274,7 @@ int ourRTSPClient::createVideoFile(){
 		((QuickTimeFileSink *)Out0)->startPlaying(sessionAfterPlaying0, this);
 	}
 	if (strcmp(filename_suffix, "avi") == 0){
-		snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "avi");
+		//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "avi");
 		Out0 = AVIFileSink::createNew(envir(), *scs.session, this->videoname, fileSinkBufferSize0, ss->width, ss->height, 25, false);
 		if (Out0 == NULL) {
 			envir() << "Failed to create a \"AVIFileSink\" for outputting to \""
@@ -297,11 +296,11 @@ int ourRTSPClient::createVideoFile(){
 			Boolean createOggFileSink = False; // by default
 			if (strcmp(scs.subsession->mediumName(), "video") == 0) {
 				if (strcmp(scs.subsession->codecName(), "H264") == 0) {
-					snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "264");
+					//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "264");
 					fs = H264VideoFileSink::createNew(envir(), this->videoname, scs.subsession->fmtp_spropparametersets(), fileSinkBufferSize0, false);
 				}
 				else if (strcmp(scs.subsession->codecName(), "H265") == 0) {
-					snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "265");
+					//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "265");
 					fs = H265VideoFileSink::createNew(envir(), this->videoname, scs.subsession->fmtp_spropvps(), scs.subsession->fmtp_spropsps(), scs.subsession->fmtp_sproppps(), fileSinkBufferSize0, false);
 				}
 				else if (strcmp(scs.subsession->codecName(), "THEORA") == 0) {
@@ -311,7 +310,7 @@ int ourRTSPClient::createVideoFile(){
 
 			else if (strcmp(scs.subsession->mediumName(), "audio") == 0) {
 				if (strcmp(scs.subsession->codecName(), "AMR") == 0 || strcmp(scs.subsession->codecName(), "AMR-WB") == 0) {
-					snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "amr");
+					//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "amr");
 					fs = AMRAudioFileSink::createNew(envir(), this->videoname, fileSinkBufferSize0, false);
 				}
 				else if (strcmp(scs.subsession->codecName(), "VORBIS") == 0 || strcmp(scs.subsession->codecName(), "OPUS") == 0) {
@@ -319,11 +318,11 @@ int ourRTSPClient::createVideoFile(){
 				}
 			}
 			if (createOggFileSink) {
-				snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "ogg");
+				//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "ogg");
 				fs = OggFileSink::createNew(envir(), this->videoname, scs.subsession->rtpTimestampFrequency(), scs.subsession->fmtp_config());
 			}
 			else if (fs == NULL) {
-				snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "unknown");
+				//snprintf(this->videoname, sizeof this->videoname, "%s.%s", tmpbuf, "unknown");
 				fs = FileSink::createNew(envir(), this->videoname, fileSinkBufferSize0, false);
 			}
 			scs.subsession->sink = fs;
@@ -373,26 +372,18 @@ void ourRTSPClient::startStorage(){
 void ourRTSPClient::stopStorage(){
 	this->closeMediaSinks0();
 	shutdownStream(this, 1);
-	char datebuf[50], timebuf[50];
-	strftime(datebuf, 50, "%F", this->starttime);
-	strftime(timebuf, 50, "%X", this->starttime);
-
-	struct tm *endtime;
-	char path[200], sqlbuf[500], ip[20], vn[200], url[200], endtimebuf[128];
-	time_t lt;
+	char path[200], sqlbuf[500], ip[20], vn[200], url[200];
 	time(&lt);
-	endtime = localtime(&lt);
-	strftime(endtimebuf, 128, "%X", endtime);
+	strftime(end_t, 128, "%X",localtime(&lt));
 	strcpy(ip, this->ss->deviceip);
 	strcpy(vn, this->videoname);
 	strcpy(url, this->ss->rtspurl);
-
 	struct sockaddr_in ourAddress;
 	ourAddress.sin_addr.s_addr = ourIPAddress(envir());
 	memset(path, 0, strlen(path));
-	sprintf(path, "http://%s:80/%s/%s/%s", AddressString(ourAddress).val(), ip, datebuf, vn);
-	const char *sql = "insert into videoindex (deviceip,rtspuri,sdate,starttime,endtime,desturi)values('%s','%s','%s','%s','%s','%s');";
-	sprintf(sqlbuf, sql, ip, url, datebuf, timebuf, endtimebuf, path);
+	sprintf(path, "http://%s:80/%s/%s/%s", AddressString(ourAddress).val(), ip, date_t, vn);
+	const char *sql = "insert into videoindex (deviceip,rtspuri,sdate,starttime,endtime,desturi)values('%s','%s','%s','%d:%d:%d','%s','%s');";
+	sprintf(sqlbuf, sql, ip, url, date_t, start_t[0],start_t[1],start_t[2], end_t, path);
 	MYSQL sql_ins;  
 	mysql_init(&sql_ins);
 	if(!mysql_real_connect(&sql_ins,MYSQL_SERVER_IP,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE,MYSQL_SERVER_PORT,NULL,0) ){
@@ -557,7 +548,6 @@ void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultStri
 
 void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString) {
 	Boolean success = False;
-
 	do {
 		UsageEnvironment& env = rtspClient->envir(); // alias
 		StreamClientState& scs = ((ourRTSPClient*)rtspClient)->scs; // alias
@@ -571,13 +561,11 @@ void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultStrin
 			unsigned uSecsToDelay = (unsigned)(scs.duration * 1000000);
 			scs.streamTimerTask = env.taskScheduler().scheduleDelayedTask(uSecsToDelay, (TaskFunc*)streamTimerHandler, rtspClient);
 		}
-
 		env << *rtspClient << "Started playing session";
 		if (scs.duration > 0) {
 			env << " (for up to " << scs.duration << " seconds)";
 		}
 		env << "...\n";
-
 		success = True;
 	} while (0);
 	delete[] resultString;

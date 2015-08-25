@@ -47,7 +47,7 @@ tinyxmlparser.$(OBJ):
 .$(C).$(OBJ):
 	$(C_COMPILER) -c $(C_FLAGS) $<
 .$(CPP).$(OBJ):
-	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $(TINYOBJS) $<
+	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS)  $<
 
 VIDEO_SERVER_OBJS    = VideoServer.$(OBJ)
 
@@ -64,7 +64,7 @@ LOCAL_LIBS =	$(LIVEMEDIA_LIB) $(GROUPSOCK_LIB) \
 LIBS =			$(LOCAL_LIBS) $(LIBS_FOR_CONSOLE_APPLICATION)
 
 
-VideoServer$(EXE):	$(VIDEO_SERVER_OBJS) $(LOCAL_LIBS) $(TINYOBJS)
+VideoServer$(EXE):	$(VIDEO_SERVER_OBJS) $(LOCAL_LIBS) 
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(VIDEO_SERVER_OBJS)  $(TINYOBJS) $(LIBS) -pthread -lxml2 `pkg-config --libs opencv`
 
 
