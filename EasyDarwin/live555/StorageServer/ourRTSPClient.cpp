@@ -366,11 +366,6 @@ void ourRTSPClient::closeMediaSinks0() {
 void ourRTSPClient::startStorage(){
 	sendstartreply("success");
 	envir().taskScheduler().doEventLoop(&eventLoopWatchVariable);
-	// when exception happens......
-	sendstartreply("exception");
-	this->closeMediaSinks0();
-	shutdownStream(this, 1);
-	fRtspClient->Remove(ss->rtspurl);
 }
 
 void ourRTSPClient::stopStorage(){
