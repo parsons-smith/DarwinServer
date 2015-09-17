@@ -140,11 +140,11 @@ bool VideoUnderstanding::IsLineIntersectRect(Point Start, Point End, Rect rect)
 	// Two point both aren't in rect
 	if (IsTwoLineIntersect(Start, End, Point(rect.x, rect.y), Point(rect.x+rect.width, rect.y)))
 		return TRUE;
-	if (IsTwoLineIntersect(Start, End, Point(rect.x+rect.width, rect.y), Point(rect.x+rect.width, rect.y-rect.height)))
+	if (IsTwoLineIntersect(Start, End, Point(rect.x+rect.width, rect.y), Point(rect.x+rect.width, rect.y+rect.height)))
 		return TRUE;
-	if (IsTwoLineIntersect(Start, End, Point(rect.x+rect.width, rect.y-rect.height),Point(rect.x, rect.y-rect.height)))
+	if (IsTwoLineIntersect(Start, End, Point(rect.x+rect.width, rect.y+rect.height),Point(rect.x, rect.y+rect.height)))
 		return TRUE;
-	if (IsTwoLineIntersect(Start, End, Point(rect.x, rect.y-rect.height),Point(rect.x, rect.y)))
+	if (IsTwoLineIntersect(Start, End, Point(rect.x, rect.y+rect.height),Point(rect.x, rect.y)))
 		return TRUE;
 	return FALSE;
 }

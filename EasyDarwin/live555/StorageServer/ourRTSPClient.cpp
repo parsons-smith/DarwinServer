@@ -371,6 +371,8 @@ void ourRTSPClient::startStorage(){
 void ourRTSPClient::stopStorage(){
 	this->closeMediaSinks0();
 	shutdownStream(this, 1);
+	printf("%s",ss->rtspurl);
+	fRtspClient->Remove(ss->rtspurl);
 	char path[200], sqlbuf[500];
 	time(&lt);
 	strftime(end_t, 128, "%X",localtime(&lt));
@@ -392,8 +394,7 @@ void ourRTSPClient::stopStorage(){
 		printf("INFO:Insert record to mysql success...\n");
 	}
 	mysql_close(&sql_ins);
-	printf("%s",ss->rtspurl);
-	fRtspClient->Remove(ss->rtspurl);
+
 }
 
 int ourRTSPClient::run(){

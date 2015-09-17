@@ -118,6 +118,7 @@ int DecodeXml(char * buffer){
 				TiXmlElement *action = new TiXmlElement("action");  
 				ProfileNode->LinkEndChild(action);  
 				ourRTSPClient* rtspClient = lookupClientByRTSPURL(rtsp);
+				printf("----------------------------------------\n");
 				if (rtspClient != NULL){
 					if (rtspClient->stop() >= 0){
 						printf("INFO:Stop storage success...\n");
@@ -167,7 +168,7 @@ void *send_thread(void * st){
 	while(true){
 		sleep(1);
 		while(!smsgq.empty()){
-			usleep(10);
+			sleep(1);
 			char *msg = smsgq.pop();
 			if(send(sock_fd, msg, strlen(msg), 0) == -1){
 				perror("ERROR:Send error\n");
